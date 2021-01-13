@@ -55,7 +55,20 @@ class MainWindow(QMainWindow):
 		self.setCentralWidget(widget)
 		self.setContentsMargins(10, 10, 10, 10)
 		self.show()
-		print(self.board)
+		
+		if self.game.u_dead_yet() == 1: #then u won
+			# TODO display highscore and replay widget
+			print("u won")
+			pass
+		
+		elif self.game.u_dead_yet() == -1: #then u lost
+			# TODO display highscore and replay widget
+			print("u lost booo")
+			pass
+
+		else:
+			# else u can keep playing
+			print(self.board)
 	
 
 	#--------- EventHandlers ---------
@@ -67,6 +80,7 @@ class MainWindow(QMainWindow):
 		elif key == QtCore.Qt.Key_Down: self.down()
 		elif key == QtCore.Qt.Key_Left: self.left()
 		elif key == QtCore.Qt.Key_Right: self.right()
+		elif key == QtCore.Qt.Key_W: self.deal_w_it()
 
 	def left(self):
 		print("left")
@@ -86,6 +100,11 @@ class MainWindow(QMainWindow):
 	def down(self):
 		print("down")
 		self.game.down()
+		self.update_GUI()
+
+	def deal_w_it(self):
+		print("hehe")
+		self.game.boom_i_almost_won()
 		self.update_GUI()
 
 
