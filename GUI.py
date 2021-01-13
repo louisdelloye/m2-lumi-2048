@@ -2,13 +2,13 @@
 
 #--------------------- IMPORTS ---------------------
 from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow, QStackedLayout, QGridLayout, QHBoxLayout, QVBoxLayout, QLabel, QPushButton
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets, QtGui, Qt
 
 import sys
 import numpy as np
 from random import randint
 
-# from main import * #import game module (actually better to do that the other way around (import GUI in main))
+import main as game #import game module (actually better to do that the other way around (import GUI in main) ?)
 import colors as c
 
 
@@ -40,37 +40,12 @@ class MainWindow(QMainWindow):
 		widget.setLayout(z_layout)
 		self.setCentralWidget(widget)
 		self.setContentsMargins(10, 10, 10, 10)
-
-
-class WLMessage(QWidget):
-	"""Alert Message to announce win/loss and restart new game"""
-
-	def __init__(self):
-		super().__init__()
-
-		layout = QVBoxLayout()
-		layout.addWidget(QLabel)
-
-
-class Board(QWidget):
-	"""Main Grid Widget"""
-
-	def __init__(self, size):
-		super().__init__()
-
-		grid = QGridLayout()
-		board = np.zeros((4,4))
-		for i in range(4):
-			for j in range(4):
-				grid.addWidget(Tile(randint(1, 11), size), i, j)
-
-		grid.setContentsMargins(0, 0, 0, 0)
-		self.setLayout(grid)
+	
 
 	#--------- EventHandlers ---------
 	def keyPressEvent(self, event):
 		key = event.key()
-		print("prout")
+
 		# Handle key bindind
 		if key == QtCore.Qt.Key_Up: self.up()
 		elif key == QtCore.Qt.Key_Down: self.down()
@@ -92,7 +67,37 @@ class Board(QWidget):
 
 
 
-class Tile(QWidget):
+class WLMessage(QWidget):
+	"""Alert Message to announce win/loss and restart new game"""
+
+	def __init__(self):
+		super().__init__()
+
+		layout = QVBoxLayout()
+		layout.addWidget(QLabel)
+
+
+
+
+class Board(QWidget):
+	"""Main Grid Widget"""
+
+	def __init__(self, size):
+		super().__init__()
+
+		grid = QGridLayout()
+		self.board = np.zeros((4,4))
+		for i in range(4):
+			for j in range(4):
+				grid.addWidget(Tile(randint(0, 11), size), i, j)
+
+		grid.setContentsMargins(0, 0, 0, 0)
+		self.setLayout(grid)
+
+
+
+
+class Tile(QLabel):
 	"""1 number Tile"""
 	def __init__(self, value, size):
 		super().__init__()
@@ -108,6 +113,12 @@ class Tile(QWidget):
 		palette.setColor(QtGui.QPalette.Window, QtGui.QColor(c.CELL_COLORS[2**value]))
 		self.setPalette(palette)
 
+		if self.value != 0: 
+			self.setText(f"{2**self.value}")
+			self.setAlignment(QtCore.Qt.AlignCenter)
+			self.setFont(QtGui.QFont("Helvetica", 40, QtGui.QFont.Bold))
+		
+
 
 	
 
@@ -117,7 +128,8 @@ class Tile(QWidget):
 app = QApplication(sys.argv)
 
 # window = MainWidget()
-window = MainWindow()
+window = Board(400)
+# window = Tile(11, 400)
 window.show()
 
 app.exec_()

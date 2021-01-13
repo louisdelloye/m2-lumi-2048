@@ -154,12 +154,4 @@ class main():
 		self.update_GUI()
 
 
-# print("NEW GAME")
 # game = main(DEBUG=True)
-# print(game.matrix)
-# game.start()
-# print(game.matrix)
-# game.left()
-# print(game.matrix)
-
-game = main(DEBUG=True)
