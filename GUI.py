@@ -6,10 +6,10 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 import sys
 import numpy as np
-from random import randint #for debugging
+from random import randint
 
 # from main import * #import game module (actually better to do that the other way around (import GUI in main))
-
+import colors as c
 
 
 
@@ -62,7 +62,7 @@ class Board(QWidget):
 		board = np.zeros((4,4))
 		for i in range(4):
 			for j in range(4):
-				grid.addWidget(Block(randint(1, 11), size), i, j)
+				grid.addWidget(Tile(randint(1, 11), size), i, j)
 
 		grid.setContentsMargins(0, 0, 0, 0)
 		self.setLayout(grid)
@@ -95,24 +95,20 @@ class Board(QWidget):
 
 
 
-class Block(QWidget):
-	"""1 number block"""
+class Tile(QWidget):
+	"""1 number Tile"""
 	def __init__(self, value, size):
 		super().__init__()
-		self.colors = dict({0: '#eee4da', 2: '#eee4da', 4: '#ede0c8', 8: '#f2b179', 16: '#f59663', \
-			32: '#f67d5f', 64: '#f65d3b', 128: '#edce72', 256: '#edcc61', 512: '#edc850', \
-			1024: '#edc53f', 2048: '#edc22e'})
-		
 		self.size = size / 4
 		self.setContentsMargins(2, 2, 2, 2)
-		self.value = value #set value of block
+		self.value = value #set value of Tile
 		self.setFixedHeight(self.size - 4) #set size
 		self.setFixedWidth(self.size - 4)
 
 		# Set color
 		self.setAutoFillBackground(True)
 		palette = self.palette()
-		palette.setColor(QtGui.QPalette.Window, QtGui.QColor(self.colors[2**value]))
+		palette.setColor(QtGui.QPalette.Window, QtGui.QColor(c.CELL_COLORS[2**value]))
 		self.setPalette(palette)
 
 
