@@ -26,13 +26,12 @@ class MainWindow(QMainWindow):
 		# Set BG color
 		self.setAutoFillBackground(True)
 		palette = self.palette()
-		palette.setColor(QtGui.QPalette.Window, QtGui.QColor('#ffecd1'))
+		palette.setColor(QtGui.QPalette.Window, QtGui.QColor('#6e645d'))
 		self.setPalette(palette)
 
 		z_layout = QStackedLayout() #create stacked layout for alerts and whatevs
-
-		# Display Board
-		self.Board = Board(self.size, self.board)
+		
+		self.Board = Board(self.size, self.board) # Display Board
 		z_layout.addWidget(self.Board)
 
 		#TODO : add stacked alerts when winning / losing
@@ -45,6 +44,20 @@ class MainWindow(QMainWindow):
 		self.show()
 	
 
+	def update_GUI(self):
+		# ! TODO : fonction absolument infame a coder plus prorprement avec maybe pyqt signals and slots buta rhow ?
+		self.board = self.game.matrix
+		z_layout = QStackedLayout() #create stacked layout for alerts and whatev
+		self.Board = Board(self.size, self.board) # Display Board
+		z_layout.addWidget(self.Board)
+		widget = QWidget() # Display app
+		widget.setLayout(z_layout)
+		self.setCentralWidget(widget)
+		self.setContentsMargins(10, 10, 10, 10)
+		self.show()
+		print(self.board)
+	
+
 	#--------- EventHandlers ---------
 	def keyPressEvent(self, event):
 		key = event.key()
@@ -55,25 +68,25 @@ class MainWindow(QMainWindow):
 		elif key == QtCore.Qt.Key_Left: self.left()
 		elif key == QtCore.Qt.Key_Right: self.right()
 
-		print(self.game.matrix)
-		# self.update()
-		self.Board.update()
-
 	def left(self):
 		print("left")
 		self.game.left()
+		self.update_GUI()
 	
 	def right(self):
 		print("right")
 		self.game.right()
+		self.update_GUI()
 	
 	def up(self):
 		print("up")
 		self.game.up()
+		self.update_GUI()
 	
 	def down(self):
 		print("down")
 		self.game.down()
+		self.update_GUI()
 
 
 
@@ -126,6 +139,7 @@ class Tile(QLabel):
 
 		if self.value != 0: 
 			self.setText(f"{int(self.value)}")
+			# self.setText("\alpha")
 			self.setAlignment(QtCore.Qt.AlignCenter)
 			self.setFont(QtGui.QFont("Helvetica", 40, QtGui.QFont.Bold))
 		
