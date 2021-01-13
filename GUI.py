@@ -8,7 +8,7 @@ import sys
 import numpy as np
 from random import randint
 
-import main as game #import game module (actually better to do that the other way around (import GUI in main) ?)
+import main as m #import game module (actually better to do that the other way around (import GUI in main) ?)
 import colors as c
 
 
@@ -20,6 +20,8 @@ class MainWindow(QMainWindow):
 		super().__init__()
 		self.size = 600
 		self.setWindowTitle("2048")
+		self.game = m.main()
+		self.board = self.game.matrix
 
 		# Set BG color
 		self.setAutoFillBackground(True)
@@ -30,8 +32,8 @@ class MainWindow(QMainWindow):
 		z_layout = QStackedLayout() #create stacked layout for alerts and whatevs
 
 		# Display Board
-		self.board = Board(self.size)
-		z_layout.addWidget(self.board)
+		self.Board = Board(self.size, self.board)
+		z_layout.addWidget(self.Board)
 
 		#TODO : add stacked alerts when winning / losing
 
@@ -40,6 +42,7 @@ class MainWindow(QMainWindow):
 		widget.setLayout(z_layout)
 		self.setCentralWidget(widget)
 		self.setContentsMargins(10, 10, 10, 10)
+		self.show()
 	
 
 	#--------- EventHandlers ---------
@@ -52,17 +55,25 @@ class MainWindow(QMainWindow):
 		elif key == QtCore.Qt.Key_Left: self.left()
 		elif key == QtCore.Qt.Key_Right: self.right()
 
+		print(self.game.matrix)
+		# self.update()
+		self.Board.update()
+
 	def left(self):
 		print("left")
+		self.game.left()
 	
 	def right(self):
 		print("right")
+		self.game.right()
 	
 	def up(self):
 		print("up")
+		self.game.up()
 	
 	def down(self):
 		print("down")
+		self.game.down()
 
 
 
@@ -82,14 +93,14 @@ class WLMessage(QWidget):
 class Board(QWidget):
 	"""Main Grid Widget"""
 
-	def __init__(self, size):
+	def __init__(self, size, board):
 		super().__init__()
 
 		grid = QGridLayout()
-		self.board = np.zeros((4,4))
+		self.board = board
 		for i in range(4):
 			for j in range(4):
-				grid.addWidget(Tile(randint(0, 11), size), i, j)
+				grid.addWidget(Tile(self.board[i,j], size), i, j)
 
 		grid.setContentsMargins(0, 0, 0, 0)
 		self.setLayout(grid)
@@ -110,11 +121,11 @@ class Tile(QLabel):
 		# Set color
 		self.setAutoFillBackground(True)
 		palette = self.palette()
-		palette.setColor(QtGui.QPalette.Window, QtGui.QColor(c.CELL_COLORS[2**value]))
+		palette.setColor(QtGui.QPalette.Window, QtGui.QColor(c.CELL_COLORS[int(value)]))
 		self.setPalette(palette)
 
 		if self.value != 0: 
-			self.setText(f"{2**self.value}")
+			self.setText(f"{int(self.value)}")
 			self.setAlignment(QtCore.Qt.AlignCenter)
 			self.setFont(QtGui.QFont("Helvetica", 40, QtGui.QFont.Bold))
 		
@@ -125,11 +136,13 @@ class Tile(QLabel):
 
 #--------------------- RUN ---------------------
 
+
+
 app = QApplication(sys.argv)
 
-# window = MainWidget()
-window = Board(400)
+window = MainWindow()
+# window = Board(400)
 # window = Tile(11, 400)
-window.show()
+# window.show()
 
 app.exec_()
