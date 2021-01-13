@@ -28,7 +28,6 @@ class main():
 			row = randint(0,3)
 			col = randint(0,3)
 		self.matrix[row,col] = 2
-		print(self.matrix)
 		self.update_GUI()
 
 
@@ -41,18 +40,18 @@ class main():
 			pos = 0
 			for j in range(4):
 				if self.matrix[i,j] != 0: 										#if there is a tile
-					stacked_matrix[i,pos] = stacked_matrix[i,j] #then we move it all the way down the row
+					stacked_matrix[i,pos] = self.matrix[i,j] #then we move it all the way down the row
 					pos +=1
 		
 		self.matrix = stacked_matrix
-	
+
 
 	def recombine(self):
 		for i in range(4):
 			for j in range(3):
 				if (self.matrix[i,j] != 0) and (self.matrix[i,j] == self.matrix[i,j+1]): #if tile not empty and equal to one next ot it then combine them
 					self.matrix[i,j] *= 2
-					self.score = self.matrix[i,j] #we have now reached a higher score
+					self.score += self.matrix[i,j] #we have now reached a higher score
 					self.matrix[i,j+1] = 0
 
 	def reverse(self):
@@ -155,5 +154,12 @@ class main():
 		self.update_GUI()
 
 
+# print("NEW GAME")
+# game = main(DEBUG=True)
+# print(game.matrix)
+# game.start()
+# print(game.matrix)
+# game.left()
+# print(game.matrix)
 
-main(DEBUG=True)
+game = main(DEBUG=True)

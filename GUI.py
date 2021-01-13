@@ -67,13 +67,10 @@ class Board(QWidget):
 		grid.setContentsMargins(0, 0, 0, 0)
 		self.setLayout(grid)
 
-
-
-
-
 	#--------- EventHandlers ---------
 	def keyPressEvent(self, event):
 		key = event.key()
+		print("prout")
 		# Handle key bindind
 		if key == QtCore.Qt.Key_Up: self.up()
 		elif key == QtCore.Qt.Key_Down: self.down()
