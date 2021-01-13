@@ -1,5 +1,5 @@
 CELL_COLORS = {
-  1: '#eee4da',
+  0: '#91857d',
   2: '#eee4da',
   4: '#ede0c8',
   8: '#f2b179',
