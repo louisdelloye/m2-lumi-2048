@@ -35,7 +35,6 @@ class main():
 	#--------- ACTIONS ON MATRIX ---------
 	def stack(self):
 		stacked_matrix = np.zeros((4,4))
-
 		for i in range(4):
 			pos = 0
 			for j in range(4):
@@ -107,13 +106,13 @@ class main():
 
 	#--------- MOVES ---------
 	def stack_AND_combine(self):
-		# old = np.array(self.matrix)
+		old = np.copy(self.matrix)
 		self.stack()
 		self.recombine()
 		self.stack()
-		# if old.all() != np.array(self.matrix.all()):
-		# 	self.add_tile() # add random tile if changes happened
-		self.add_tile()
+		if not np.allclose(old, self.matrix):
+			self.add_tile() # add random tile if changes happened
+
 
 	def left(self):
 		if self.DEBUG: print("left")
