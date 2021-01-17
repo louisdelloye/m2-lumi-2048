@@ -106,15 +106,21 @@ class main():
 
 
 	#--------- MOVES ---------
+	def stack_AND_combine(self):
+		# old = np.array(self.matrix)
+		self.stack()
+		self.recombine()
+		self.stack()
+		# if old.all() != np.array(self.matrix.all()):
+		# 	self.add_tile() # add random tile if changes happened
+		self.add_tile()
+
 	def left(self):
 		if self.DEBUG: print("left")
 
 		if self.u_dead_yet() not in [-1, 1]:
 			# Move all to left
-			self.stack()
-			self.recombine()
-			self.stack()
-			self.add_tile() # add random tile
+			self.stack_AND_combine()
 			self.update_GUI()
 		
 
@@ -124,11 +130,8 @@ class main():
 		if self.u_dead_yet() not in [-1, 1]:
 			# Move all to right
 			self.reverse() #by flipping it we just have to the same as for left()
-			self.stack()
-			self.recombine()
-			self.stack()
+			self.stack_AND_combine()
 			self.reverse()
-			self.add_tile() # add random tile
 			self.update_GUI()
 
 	def up(self):
@@ -137,11 +140,8 @@ class main():
 		if self.u_dead_yet() not in [-1, 1]:
 			# Move all to top
 			self.transpose()
-			self.stack()
-			self.recombine()
-			self.stack()
+			self.stack_AND_combine()
 			self.transpose()
-			self.add_tile() # add random tile
 			self.update_GUI()
 
 	def down(self):
@@ -151,12 +151,9 @@ class main():
 			# Move all to bottom
 			self.transpose()
 			self.reverse() 
-			self.stack()
-			self.recombine()
-			self.stack()
+			self.stack_AND_combine()
 			self.reverse()
 			self.transpose()
-			self.add_tile() # add random tile
 			self.update_GUI()
 
 	def boom_i_almost_won(self):
