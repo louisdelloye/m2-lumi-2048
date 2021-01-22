@@ -42,34 +42,7 @@ class MainWindow(QMainWindow):
 		self.setCentralWidget(widget)
 		self.setContentsMargins(10, 10, 10, 10)
 		self.show()
-	
-
-	def update_GUI(self):
-		# ! TODO : fonction absolument infame a coder plus prorprement avec maybe pyqt signals and slots buta rhow ?
-		self.board = self.game.matrix
-		z_layout = QStackedLayout() #create stacked layout for alerts and whatev
-		self.Board = Board(self.size, self.board) # Display Board
-		z_layout.addWidget(self.Board)
-		widget = QWidget() # Display app
-		widget.setLayout(z_layout)
-		self.setCentralWidget(widget)
-		self.setContentsMargins(10, 10, 10, 10)
-		self.show()
 		
-		if self.game.u_dead_yet() == 1: #then u won
-			# TODO display highscore and replay widget
-			print("u won")
-			pass
-		
-		elif self.game.u_dead_yet() == -1: #then u lost
-			# TODO display highscore and replay widget
-			print("u lost booo")
-			pass
-
-		else:
-			# else u can keep playing
-			print(self.board)
-	
 
 	#--------- EventHandlers ---------
 	def keyPressEvent(self, event):
@@ -81,31 +54,27 @@ class MainWindow(QMainWindow):
 		elif key == QtCore.Qt.Key_Left: self.left()
 		elif key == QtCore.Qt.Key_Right: self.right()
 		elif key == QtCore.Qt.Key_W: self.deal_w_it()
+		self.Board.board_updated.emit(self.game.matrix) # condition if no moves
 
 	def left(self):
 		print("left")
 		self.game.left()
-		self.update_GUI()
 	
 	def right(self):
 		print("right")
 		self.game.right()
-		self.update_GUI()
 	
 	def up(self):
 		print("up")
 		self.game.up()
-		self.update_GUI()
 	
 	def down(self):
 		print("down")
 		self.game.down()
-		self.update_GUI()
 
 	def deal_w_it(self):
 		print("hehe")
 		self.game.boom_i_almost_won()
-		self.update_GUI()
 
 
 
@@ -124,6 +93,7 @@ class WLMessage(QWidget):
 
 class Board(QWidget):
 	"""Main Grid Widget"""
+	board_updated = QtCore.pyqtSignal(np.ndarray) # slot
 
 	def __init__(self, size, board):
 		super().__init__()
@@ -132,7 +102,7 @@ class Board(QWidget):
 		self.board = board
 		for i in range(4):
 			for j in range(4):
-				grid.addWidget(Tile(self.board[i,j], size), i, j)
+				grid.addWidget(Tile(self.board[i,j], size, self, i, j), i, j)
 
 		grid.setContentsMargins(0, 0, 0, 0)
 		self.setLayout(grid)
@@ -142,8 +112,12 @@ class Board(QWidget):
 
 class Tile(QLabel):
 	"""1 number Tile"""
-	def __init__(self, value, size):
+	def __init__(self, value, size, parent, i, j):
 		super().__init__()
+		self.i = i
+		self.j = j
+		self.board = parent
+		self.board.board_updated.connect(self.update_tile)
 		self.size = size / 4
 		self.setContentsMargins(2, 2, 2, 2)
 		self.value = value #set value of Tile
@@ -158,13 +132,25 @@ class Tile(QLabel):
 
 		if self.value != 0: 
 			self.setText(f"{int(self.value)}")
-			# self.setText("\alpha")
 			self.setAlignment(QtCore.Qt.AlignCenter)
 			self.setFont(QtGui.QFont("Helvetica", 40, QtGui.QFont.Bold))
+
+	def update_tile(self, matrix):
+		self.value = matrix[self.i,self.j] # TODO #doesn't work cause
+
+		# Set color
+		self.setAutoFillBackground(True)
+		palette = self.palette()
+		palette.setColor(QtGui.QPalette.Window, QtGui.QColor(c.CELL_COLORS[int(self.value)]))
+		self.setPalette(palette)
+
+		if self.value != 0: 
+			self.setText(f"{int(self.value)}")
+			self.setAlignment(QtCore.Qt.AlignCenter)
+			self.setFont(QtGui.QFont("Helvetica", 40, QtGui.QFont.Bold))
+		else: self.setText("")
+		self.show()
 		
-
-
-	
 
 
 #--------------------- RUN ---------------------
@@ -174,8 +160,5 @@ class Tile(QLabel):
 app = QApplication(sys.argv)
 
 window = MainWindow()
-# window = Board(400)
-# window = Tile(11, 400)
-# window.show()
 
 app.exec_()

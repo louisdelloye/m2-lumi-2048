@@ -159,5 +159,7 @@ class main():
 		self.matrix[0,0] = 1024 
 		self.matrix[0,1] = 1024 
 
+if __name__ == "__main__":
+	game = main(DEBUG=True)
 
-# game = main(DEBUG=True)
+# independent files
