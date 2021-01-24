@@ -1,5 +1,5 @@
 CELL_COLORS = {
-  0: '#eee4da',
+  0: '#91857d',
   2: '#eee4da',
   4: '#ede0c8',
   8: '#f2b179',
@@ -14,7 +14,7 @@ CELL_COLORS = {
 }
 
 CELL_TEXT_COLORS = { #TODO
-  0: '#eee4da',
+  1: '#eee4da',
   2: '#eee4da',
   4: '#ede0c8',
   8: '#f2b179',

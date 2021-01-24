@@ -35,7 +35,6 @@ class main():
 	#--------- ACTIONS ON MATRIX ---------
 	def stack(self):
 		stacked_matrix = np.zeros((4,4))
-
 		for i in range(4):
 			pos = 0
 			for j in range(4):
@@ -66,10 +65,12 @@ class main():
 	def add_tile(self):
 		row = randint(0,3)
 		col = randint(0,3)
-		while self.matrix[row, col] != 0: #make sure we don't erase a non-empty tile
-			row = randint(0,3)
-			col = randint(0,3)
-		self.matrix[row,col] = choice([2, 4]) #add randomly a 2 or a 4
+		if any(0 in r for r in self.matrix):
+			while self.matrix[row, col] != 0:# and any(0 in r for r in self.matrix): #make sure we don't erase a non-empty tile
+				# ! causes game to freeze when u lost cause u'll never verify that condition !!!
+				row = randint(0,3)
+				col = randint(0,3)
+			self.matrix[row,col] = choice([2, 4]) #add randomly a 2 or a 4
 
 
 	def update_GUI(self):
@@ -78,7 +79,6 @@ class main():
 			time.sleep(2) #wait 2 seconds
 			actions = [self.left, self.right, self.up, self.down]
 			actions[randint(0,3)]() #simulate an action
-		self.u_dead_yet()
 
 
 	def u_stuck_yet_H(self, m):
@@ -90,76 +90,76 @@ class main():
 
 	def u_stuck_yet_V(self, m):
 		#check for possible moves in the vertical direction
-		self.u_stuck_yet_H(np.transpose(m))
+		return self.u_stuck_yet_H(np.transpose(m))
 
 	def u_dead_yet(self):
 		if not any(0 in row for row in self.matrix) and self.u_stuck_yet_H(self.matrix) and self.u_stuck_yet_V(self.matrix):
 			#then GAME OVER you lost you can't move anymore
 			if self.DEBUG: print("GAME OVER")
-			pass #TODO
+			return -1
 		elif any(2048 in row for row in self.matrix):
 			#then you won congratulations
 			if self.DEBUG: print("YOU WON")
-			pass #TODO
+			return 1
+		return 0
 
 
 	#--------- MOVES ---------
-	def left(self):
-		if self.DEBUG: print("left")
-
-		# Move all to left
+	def stack_AND_combine(self):
+		old = np.copy(self.matrix)
 		self.stack()
 		self.recombine()
 		self.stack()
-		self.add_tile() # add random tile
-		self.update_GUI()
+		if not np.allclose(old, self.matrix):
+			self.add_tile() # add random tile if changes happened
+
+
+	def left(self):
+		if self.DEBUG: print("left")
+
+		if self.u_dead_yet() not in [-1, 1]:
+			# Move all to left
+			self.stack_AND_combine()
+			self.update_GUI()
 		
 
 	def right(self):
 		if self.DEBUG: print("right")
 
-		# Move all to right
-		self.reverse() #by flipping it we just have to the same as for left()
-		self.stack()
-		self.recombine()
-		self.stack()
-		self.reverse()
-		self.add_tile() # add random tile
-		self.update_GUI()
+		if self.u_dead_yet() not in [-1, 1]:
+			# Move all to right
+			self.reverse() #by flipping it we just have to the same as for left()
+			self.stack_AND_combine()
+			self.reverse()
+			self.update_GUI()
 
 	def up(self):
 		if self.DEBUG: print("up")
 
-		# Move all to top
-		self.transpose()
-		self.stack()
-		self.recombine()
-		self.stack()
-		self.transpose()
-		self.add_tile() # add random tile
-		self.update_GUI()
+		if self.u_dead_yet() not in [-1, 1]:
+			# Move all to top
+			self.transpose()
+			self.stack_AND_combine()
+			self.transpose()
+			self.update_GUI()
 
 	def down(self):
 		if self.DEBUG: print("down")
 
-		# Move all to bottom
-		self.transpose()
-		self.reverse() 
-		self.stack()
-		self.recombine()
-		self.stack()
-		self.reverse()
-		self.transpose()
-		self.add_tile() # add random tile
-		self.update_GUI()
+		if self.u_dead_yet() not in [-1, 1]:
+			# Move all to bottom
+			self.transpose()
+			self.reverse() 
+			self.stack_AND_combine()
+			self.reverse()
+			self.transpose()
+			self.update_GUI()
 
+	def boom_i_almost_won(self):
+		self.matrix[0,0] = 1024 
+		self.matrix[0,1] = 1024 
 
-# print("NEW GAME")
-# game = main(DEBUG=True)
-# print(game.matrix)
-# game.start()
-# print(game.matrix)
-# game.left()
-# print(game.matrix)
+if __name__ == "__main__":
+	game = main(DEBUG=True)
 
-game = main(DEBUG=True)
+# independent files
