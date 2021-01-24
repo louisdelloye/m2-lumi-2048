@@ -3,42 +3,31 @@ import numpy as np
 from main import main
 import matplotlib.pyplot as plt
 import pandas as pd
-#import GUI as gui
 
 #--------------------- Random Agent ---------------------
 
-""" setattr(main, 'random_move', random_move)
-def random_move(self):
-    #Does a move in a random direction
-    move=np.random.randint(4)
-    if move == 0: self.up()
-    if move == 1: self.down()
-    if move == 2: self.left()
-    if move == 3: self.right() """
-
-
 def random_agent(jeu):
-    #Randomly plays the game
-    while jeu.u_dead_yet()==0:
-        move=np.random.randint(4)
-        if move == 0: jeu.up()
-        if move == 1: jeu.down()
-        if move == 2: jeu.left()
-        if move == 3: jeu.right()
+	#Randomly plays the game
+	while jeu.u_dead_yet()==0:
+		move=np.random.randint(4)
+		if move == 0: jeu.up()
+		if move == 1: jeu.down()
+		if move == 2: jeu.left()
+		if move == 3: jeu.right()
 
 def simulate_random(N):
-    score=np.zeros(N)
-    for i in range(N):
-        game=main()
-        random_agent(game)
-        score[i]=game.score
-    return score
+	score=np.zeros(N)
+	for i in range(N):
+		game=main()
+		random_agent(game)
+		score[i]=game.score
+	return score
 def plot_random(N):
-    bins=[0, 500, 1000, 1500, 2000, 2500, 3000]
-    score = simulate_random(N)
-    plt.hist(score, bins=bins)
-    plt.xticks(bins)
-    plt.show()
+	bins=[0, 500, 1000, 1500, 2000, 2500, 3000]
+	score = simulate_random(N)
+	plt.hist(score, bins=bins)
+	plt.xticks(bins)
+	plt.show()
 
 
 #--------------------- Basic Strategy Agent ---------------------
