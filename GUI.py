@@ -31,17 +31,9 @@ class MainWindow(QMainWindow):
 		palette.setColor(QtGui.QPalette.Window, QtGui.QColor('#6e645d'))
 		self.setPalette(palette)
 
-		z_layout = QStackedLayout() #create stacked layout for alerts and whatevs
-		
 		self.Board = Board(self.size, self.board) # Display Board
-		z_layout.addWidget(self.Board)
 
-		#TODO : add stacked alerts when winning / losing
-
-		# Display app
-		widget = QWidget()
-		widget.setLayout(z_layout)
-		self.setCentralWidget(widget)
+		self.setCentralWidget(self.Board)
 		self.setContentsMargins(10, 10, 10, 10)
 		self.show()
 		
@@ -93,13 +85,11 @@ class MainWindow(QMainWindow):
 			pass #keep the game going
 		else:
 			dialog = WLMessage(True if game_state == 1 else False, self)
-			dialog.exec_() #TODO make that quit once u choose either replay or quit ?
+			dialog.exec_()
 
 
 class WLMessage(QDialog):
 	"""Alert message to announce win/loss and restart new game"""
-	# replay_request = QtCore.pyqtSignal()
-	# quit_request = QtCore.pyqtSignal()
 
 	def __init__(self, has_won, parent_window):
 		super().__init__()
@@ -111,7 +101,7 @@ class WLMessage(QDialog):
 		# Set color
 		self.setAutoFillBackground(True)
 		palette = self.palette()
-		palette.setColor(QtGui.QPalette.Window, QtGui.QColor(c.CELL_COLORS[int(2)]))
+		palette.setColor(QtGui.QPalette.Window, QtGui.QColor('#6e645d'))
 		self.setPalette(palette)
 
 		layout = QVBoxLayout()
@@ -132,8 +122,9 @@ class WLMessage(QDialog):
 		replay.clicked.connect(self.restart_handler)
 		replay.setFixedHeight(40)
 		replay.setStyleSheet("""QPushButton {
-			background-color: '#edc22e'; border: 1px solid grey;
+			background-color: '#edc22e';
 			border-radius: 5px;
+			color: #eee4da;
 		}""")
 		h_layout.addWidget(replay)
 
@@ -143,7 +134,7 @@ class WLMessage(QDialog):
 		quitter.clicked.connect(self.quit_handler)
 		quitter.setFixedHeight(40)
 		quitter.setStyleSheet("""QPushButton {
-			background-color: #91857d; border: 1px solid grey;
+			background-color: #91857d;
 			border-radius: 5px;
 		}""")
 		h_layout.addWidget(quitter)
@@ -163,9 +154,7 @@ class WLMessage(QDialog):
 
 	def quit_handler(self):
 		print("close")
-		# self.quit_request.emit()
-		QtCore.QCoreApplication.quit()
-		self.close() #TODO does that make it quit ?
+		QtCore.QCoreApplication.quit() #quit application
 
 
 

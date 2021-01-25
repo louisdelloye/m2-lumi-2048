@@ -67,7 +67,6 @@ class main():
 		col = randint(0,3)
 		if any(0 in r for r in self.matrix):
 			while self.matrix[row, col] != 0:# and any(0 in r for r in self.matrix): #make sure we don't erase a non-empty tile
-				# ! causes game to freeze when u lost cause u'll never verify that condition !!!
 				row = randint(0,3)
 				col = randint(0,3)
 			self.matrix[row,col] = choice([2, 4]) #add randomly a 2 or a 4
@@ -160,13 +159,13 @@ class main():
 		self.matrix[0,1] = 1024 
 
 	def u_lose(self):
+		"""Method that creates matrix where u can't do anything"""
 		losing_matrix = 2 * np.ones((4,4))
 		for i in range(4):
 			for j in range(4):
 				if (j%2 == 0 and i%2 == 1) or (j%2 == 1 and i%2 == 0):
 					losing_matrix[i,j] = 4
 		self.matrix = losing_matrix
-		print(self.matrix)
 
 
 
