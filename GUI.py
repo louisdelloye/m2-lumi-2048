@@ -1,7 +1,7 @@
 """GUI module for our 2048 application"""
 
 #--------------------- IMPORTS ---------------------
-from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow, QStackedLayout, QGridLayout, QHBoxLayout, QVBoxLayout, QLabel, QPushButton
+from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow, QDialog, QStackedLayout, QGridLayout, QHBoxLayout, QVBoxLayout, QLabel, QPushButton
 from PyQt5 import QtCore, QtWidgets, QtGui, Qt
 
 import sys
@@ -15,6 +15,8 @@ import colors as c
 
 #--------------------- MAIN ---------------------
 class MainWindow(QMainWindow):
+	# replay_demanded = QtCore.pyqtSignal()
+	# quitting = QtCore.pyqtSignal()
 
 	def __init__(self):
 		super().__init__()
@@ -43,6 +45,8 @@ class MainWindow(QMainWindow):
 		self.setContentsMargins(10, 10, 10, 10)
 		self.show()
 		
+	def restart(self):
+		self.game.start()
 
 	#--------- EventHandlers ---------
 	def keyPressEvent(self, event):
@@ -54,7 +58,9 @@ class MainWindow(QMainWindow):
 		elif key == QtCore.Qt.Key_Left: self.left()
 		elif key == QtCore.Qt.Key_Right: self.right()
 		elif key == QtCore.Qt.Key_W: self.deal_w_it()
+		elif key == QtCore.Qt.Key_L: self.u_die()
 		self.Board.board_updated.emit(self.game.matrix) # condition if no moves
+		self.show_dialog()
 
 	def left(self):
 		print("left")
@@ -76,17 +82,90 @@ class MainWindow(QMainWindow):
 		print("hehe")
 		self.game.boom_i_almost_won()
 
+	def u_die(self):
+		print("die")
+		self.game.u_lose()
+
+	def show_dialog(self):
+		"""Prompt for dialog"""
+		game_state = self.game.u_dead_yet()
+		if game_state == 0:
+			pass #keep the game going
+		else:
+			dialog = WLMessage(True if game_state == 1 else False, self)
+			dialog.exec_() #TODO make that quit once u choose either replay or quit ?
 
 
+class WLMessage(QDialog):
+	"""Alert message to announce win/loss and restart new game"""
+	# replay_request = QtCore.pyqtSignal()
+	# quit_request = QtCore.pyqtSignal()
 
-class WLMessage(QWidget):
-	"""Alert Message to announce win/loss and restart new game"""
-
-	def __init__(self):
+	def __init__(self, has_won, parent_window):
 		super().__init__()
+		self.setFixedHeight(150) #set size
+		self.setFixedWidth(300)
+
+		self.parent_window = parent_window
+
+		# Set color
+		self.setAutoFillBackground(True)
+		palette = self.palette()
+		palette.setColor(QtGui.QPalette.Window, QtGui.QColor(c.CELL_COLORS[int(2)]))
+		self.setPalette(palette)
 
 		layout = QVBoxLayout()
-		layout.addWidget(QLabel)
+
+		#Text info
+		info = QLabel()
+		info.setText("You won !" if has_won else "You lost")
+		info.setAlignment(QtCore.Qt.AlignCenter)
+		info.setFont(QtGui.QFont("Helvetica", 20, QtGui.QFont.Bold))
+		layout.addWidget(info)
+
+		#Buttons to quit / replay
+		h_layout = QHBoxLayout()
+
+		replay = QPushButton()
+		replay.setText("Replay")
+		replay.setFont(QtGui.QFont("Helvetica", 20, QtGui.QFont.Normal))
+		replay.clicked.connect(self.restart_handler)
+		replay.setFixedHeight(40)
+		replay.setStyleSheet("""QPushButton {
+			background-color: '#edc22e'; border: 1px solid grey;
+			border-radius: 5px;
+		}""")
+		h_layout.addWidget(replay)
+
+		quitter = QPushButton()
+		quitter.setText("Quit")
+		quitter.setFont(QtGui.QFont("Helvetica", 20, QtGui.QFont.Normal))
+		quitter.clicked.connect(self.quit_handler)
+		quitter.setFixedHeight(40)
+		quitter.setStyleSheet("""QPushButton {
+			background-color: #91857d; border: 1px solid grey;
+			border-radius: 5px;
+		}""")
+		h_layout.addWidget(quitter)
+
+		h_widget = QWidget()
+		h_widget.setLayout(h_layout)
+		layout.addWidget(h_widget)
+		
+		self.setLayout(layout)
+		self.show()
+
+	def restart_handler(self):
+		print("restart")
+		self.parent_window.restart() #reset board
+		self.parent_window.Board.board_updated.emit(self.parent_window.game.matrix) #update GUI
+		self.close() #close dialog
+
+	def quit_handler(self):
+		print("close")
+		# self.quit_request.emit()
+		QtCore.QCoreApplication.quit()
+		self.close() #TODO does that make it quit ?
 
 
 
@@ -106,7 +185,6 @@ class Board(QWidget):
 
 		grid.setContentsMargins(0, 0, 0, 0)
 		self.setLayout(grid)
-
 
 
 
@@ -160,5 +238,6 @@ class Tile(QLabel):
 app = QApplication(sys.argv)
 
 window = MainWindow()
+# window = WLMessage(True)
 
 app.exec_()

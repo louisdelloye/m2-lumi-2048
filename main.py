@@ -159,6 +159,17 @@ class main():
 		self.matrix[0,0] = 1024 
 		self.matrix[0,1] = 1024 
 
+	def u_lose(self):
+		losing_matrix = 2 * np.ones((4,4))
+		for i in range(4):
+			for j in range(4):
+				if (j%2 == 0 and i%2 == 1) or (j%2 == 1 and i%2 == 0):
+					losing_matrix[i,j] = 4
+		self.matrix = losing_matrix
+		print(self.matrix)
+
+
+
 if __name__ == "__main__":
 	game = main(DEBUG=True)
 
