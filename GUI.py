@@ -18,11 +18,11 @@ class MainWindow(QMainWindow):
 	# replay_demanded = QtCore.pyqtSignal()
 	# quitting = QtCore.pyqtSignal()
 
-	def __init__(self):
+	def __init__(self, game=m.main()):
 		super().__init__()
 		self.size = 600
 		self.setWindowTitle("2048")
-		self.game = m.main()
+		self.game = game
 		self.board = self.game.matrix
 
 		# Set BG color
