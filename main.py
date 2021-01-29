@@ -15,10 +15,13 @@ class main():
 		self.matrix = np.zeros((4,4))
 		self.score = 0
 		self.start()
+		self.matrix_unchanged = 0
+		
 
 	def start(self):
 		self.matrix = np.zeros((4,4))
 		self.score = 0
+		
 
 		#add 2 random 2
 		row = randint(0,3)
@@ -111,7 +114,8 @@ class main():
 		self.stack()
 		if not np.allclose(old, self.matrix):
 			self.add_tile() # add random tile if changes happened
-
+			self.matrix_unchanged = 0
+		else: self.matrix_unchanged = 1
 
 	def left(self):
 		if self.DEBUG: print("left")
@@ -168,8 +172,8 @@ class main():
 		self.matrix = losing_matrix
 
 
-
+"""
 if __name__ == "__main__":
 	game = main(DEBUG=True)
-
+"""
 # independent files

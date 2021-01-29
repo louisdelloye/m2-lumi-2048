@@ -31,8 +31,36 @@ def plot_random(N):
 
 
 #--------------------- Basic Strategy Agent ---------------------
+def prio_agent(jeu):
+	#Player who follows priorities: right > up > down > left
+	while jeu.u_dead_yet() == 0: 
+		jeu.right()
+		if jeu.matrix_unchanged:
+			jeu.up()
+		if jeu.matrix_unchanged:
+			jeu.down()
+		if jeu.matrix_unchanged:
+			jeu.left()
+
+def simulate_prio(N):
+	score=np.zeros(N)
+	for i in range(N):
+		game=main()
+		prio_agent(game)
+		score[i]=game.score
+	return score
+def plot_prio(N):
+	bins=[0, 500, 1000, 1500, 2000, 2500, 3000]
+	score = simulate_prio(N)
+	plt.hist(score, bins=bins)
+	plt.xticks(bins)
+	plt.show()
+
+
+
+
+
 """
-setattr(main, 'random_move', random_move)
 def basic_move(self):
     if self.u_stuck_yet_H
     #Does a move in a random direction
