@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 #--------------------- Random Agent ---------------------
+bins=[0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
+
 
 def random_agent(jeu):
 	#Randomly plays the game
@@ -23,7 +25,6 @@ def simulate_random(N):
 		score[i]=game.score
 	return score
 def plot_random(N):
-	bins=[0, 500, 1000, 1500, 2000, 2500, 3000]
 	score = simulate_random(N)
 	plt.hist(score, bins=bins)
 	plt.xticks(bins)
@@ -50,7 +51,6 @@ def simulate_prio(N):
 		score[i]=game.score
 	return score
 def plot_prio(N):
-	bins=[0, 500, 1000, 1500, 2000, 2500, 3000]
 	score = simulate_prio(N)
 	plt.hist(score, bins=bins)
 	plt.xticks(bins)
