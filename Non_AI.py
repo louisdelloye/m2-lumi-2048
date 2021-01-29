@@ -3,16 +3,24 @@ import numpy as np
 from main import main
 import matplotlib.pyplot as plt
 import pandas as pd
+import time
 
 import sys
 from PyQt5.QtWidgets import QApplication
 from GUI import MainWindow
 
+def update_gui(gui, board, speed=0.25):
+	if gui:
+		gui.Board.board = board
+		gui.Board.board_updated.emit(board)
+		time.sleep(speed)
+	else: pass
+
 #--------------------- Random Agent ---------------------
 bins=[0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
 
 
-def random_agent(jeu):
+def random_agent(jeu, gui=None):
 	#Randomly plays the game
 	while jeu.u_dead_yet()==0:
 		move=np.random.randint(4)
@@ -20,12 +28,13 @@ def random_agent(jeu):
 		if move == 1: jeu.down()
 		if move == 2: jeu.left()
 		if move == 3: jeu.right()
+		update_gui(gui, jeu.matrix)
 
-def simulate_random(N):
+def simulate_random(N, gui=None):
 	score=np.zeros(N)
 	for i in range(N):
 		game=main()
-		random_agent(game)
+		random_agent(game, gui)
 		score[i]=game.score
 	return score
 def plot_random(N):
@@ -51,11 +60,6 @@ def prio_agent(jeu, gui=None):
 			jeu.left()
 			update_gui(gui, jeu.matrix)
 
-def update_gui(gui, board):
-	if gui:
-		gui.Board.board = board
-		gui.Board.board_updated.emit(board)
-	else: pass
 
 def simulate_prio(N, gui=None):
 	score=np.zeros(N)
