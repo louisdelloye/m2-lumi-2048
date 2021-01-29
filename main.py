@@ -38,7 +38,7 @@ class main():
 		for i in range(4):
 			pos = 0
 			for j in range(4):
-				if self.matrix[i,j] != 0: 										#if there is a tile
+				if self.matrix[i,j] != 0: 								 #if there is a tile
 					stacked_matrix[i,pos] = self.matrix[i,j] #then we move it all the way down the row
 					pos +=1
 		

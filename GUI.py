@@ -2,6 +2,7 @@
 
 #--------------------- IMPORTS ---------------------
 from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow, QDialog, QStackedLayout, QGridLayout, QHBoxLayout, QVBoxLayout, QLabel, QPushButton
+from PyQt5.QtCore import QRunnable, QThreadPool
 from PyQt5 import QtCore, QtWidgets, QtGui, Qt
 
 import sys
@@ -15,16 +16,13 @@ import colors as c
 
 #--------------------- MAIN ---------------------
 class MainWindow(QMainWindow):
-	# replay_demanded = QtCore.pyqtSignal()
-	# quitting = QtCore.pyqtSignal()
-
 	def __init__(self, game=m.main()):
 		super().__init__()
 		self.size = 600
 		self.setWindowTitle("2048")
 		self.game = game
 		self.board = self.game.matrix
-
+		
 		# Set BG color
 		self.setAutoFillBackground(True)
 		palette = self.palette()
@@ -35,6 +33,9 @@ class MainWindow(QMainWindow):
 
 		self.setCentralWidget(self.Board)
 		self.setContentsMargins(10, 10, 10, 10)
+
+		self.threadpool = QThreadPool() #multithreading
+
 		self.show()
 		
 	def restart(self):
@@ -51,6 +52,7 @@ class MainWindow(QMainWindow):
 		elif key == QtCore.Qt.Key_Right: self.right()
 		elif key == QtCore.Qt.Key_W: self.deal_w_it()
 		elif key == QtCore.Qt.Key_L: self.u_die()
+		elif key == QtCore.Qt.Key_Q: QtCore.QCoreApplication.quit() #quit app
 		self.Board.board_updated.emit(self.game.matrix) # condition if no moves
 		self.show_dialog()
 
@@ -86,6 +88,16 @@ class MainWindow(QMainWindow):
 		else:
 			dialog = WLMessage(True if game_state == 1 else False, self)
 			dialog.exec_()
+
+	def mutlithread_this(self, fn, *args, **kwargs):
+		"""
+		handles multithreading (usefull for Q-learning)
+		"""
+		# Pass the function to execute
+		worker = Worker(fn, *args, **kwargs) # Any other args, kwargs are passed to the run function
+
+    # Execute
+		self.threadpool.start(worker)
 
 
 class WLMessage(QDialog):
@@ -158,7 +170,6 @@ class WLMessage(QDialog):
 
 
 
-
 class Board(QWidget):
 	"""Main Grid Widget"""
 	board_updated = QtCore.pyqtSignal(np.ndarray) # slot
@@ -203,7 +214,7 @@ class Tile(QLabel):
 			self.setFont(QtGui.QFont("Helvetica", 40, QtGui.QFont.Bold))
 
 	def update_tile(self, matrix):
-		self.value = matrix[self.i,self.j] # TODO #doesn't work cause
+		self.value = matrix[self.i,self.j] 
 
 		# Set color
 		self.setAutoFillBackground(True)
@@ -220,13 +231,40 @@ class Tile(QLabel):
 		
 
 
+class Worker(QRunnable):
+	'''
+	Worker thread
+
+	Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
+
+	:param callback: The function callback to run on this worker thread. Supplied args and
+										kwargs will be passed through to the runner.
+	:type callback: function
+	:param args: Arguments to pass to the callback function
+	:param kwargs: Keywords to pass to the callback function
+	'''
+
+	def __init__(self, fn, *args, **kwargs):
+		super(Worker, self).__init__()
+		# Store constructor arguments (re-used for processing)
+		self.fn = fn
+		self.args = args
+		self.kwargs = kwargs
+
+	@QtCore.pyqtSlot()
+	def run(self):
+		'''
+		Initialise the runner function with passed args, kwargs.
+		'''
+		self.fn(*self.args, **self.kwargs)
+
 #--------------------- RUN ---------------------
 
 
+if __name__ == "__main__":
+	app = QApplication(sys.argv)
 
-app = QApplication(sys.argv)
+	window = MainWindow()
+	# window = WLMessage(True)
 
-window = MainWindow()
-# window = WLMessage(True)
-
-app.exec_()
+	app.exec_()
