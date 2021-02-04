@@ -20,7 +20,7 @@ def update_gui(gui, board, speed=0.25):
 bins=[0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
 tilebins=[4,8,16,32,64,128,256,512,1024,2048,4096]
 
-def random_agent(jeu, gui=None):
+def random_agent(jeu, gui=None, speed=0):
 	#Randomly plays the game
 	while jeu.u_dead_yet()==0:
 		move=np.random.randint(4)
@@ -28,14 +28,15 @@ def random_agent(jeu, gui=None):
 		if move == 1: jeu.down()
 		if move == 2: jeu.left()
 		if move == 3: jeu.right()
-		update_gui(gui, jeu.matrix)
+		update_gui(gui, jeu.matrix, speed)
 
-def simulate_random(N, gui=None):
+def simulate_random(N, gui=None, speed=0):
 	score=np.zeros(N)
 	for i in range(N):
 		game=main()
-		random_agent(game, gui)
+		random_agent(game, gui, speed)
 		score[i]=game.score
+		# time.sleep(speed)
 	return score
 def plot_random(N):
 	score = simulate_random(N)
@@ -45,31 +46,36 @@ def plot_random(N):
 
 
 #--------------------- Basic Strategy Agent ---------------------
-def prio_agent(jeu, gui=None):
+def prio_agent(jeu, gui=None, speed=0):
 	#Player who follows priorities: right > up > down > left
 	while jeu.u_dead_yet() == 0: 
 		jeu.right()
-		update_gui(gui, jeu.matrix)
+		update_gui(gui, jeu.matrix, speed)
 		if jeu.matrix_unchanged:
 			jeu.up()
-			update_gui(gui, jeu.matrix)
+			update_gui(gui, jeu.matrix, speed)
 		if jeu.matrix_unchanged:
 			jeu.down()
-			update_gui(gui, jeu.matrix)
+			update_gui(gui, jeu.matrix, speed)
 		if jeu.matrix_unchanged:
 			jeu.left()
-			update_gui(gui, jeu.matrix)
+			update_gui(gui, jeu.matrix, speed)
 
 
-def simulate_prio(N, gui=None):
+def simulate_prio(N, gui=None, speed=0):
 	score=np.zeros(N)
 	maxitile=np.zeros(N)
 	for i in range(N):
 		game=main()
-		prio_agent(game, gui)
+		prio_agent(game, gui, speed)
 		score[i]=game.score
+<<<<<<< HEAD
 		maxitile[i]=game.matrix.max()
 	return score, maxitile
+=======
+		# time.sleep(speed)
+	return score
+>>>>>>> c4a6b797bad049140a6379da071e648154269948
 
 def plot_prio(N):
 	#simulates and plots the results

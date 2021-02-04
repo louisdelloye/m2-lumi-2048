@@ -172,8 +172,8 @@ class main():
 		self.matrix = losing_matrix
 
 
-"""
+
 if __name__ == "__main__":
 	game = main(DEBUG=True)
-"""
+
 # independent files
