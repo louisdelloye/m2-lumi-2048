@@ -10,26 +10,18 @@ import sys
 from PyQt5.QtWidgets import QApplication
 from GUI import MainWindow
 
-def update_gui(gui, board, speed=0.25):
-	if gui:
-		gui.Board.board = board
-		gui.Board.board_updated.emit(board)
-		time.sleep(speed)
-	else: pass
-
-
+#--------------------- Base Agent ---------------------
 class AgentBase():
 	def __init__(self, gui=None, speed=0.05):
-		self.game = game
 		self.speed = speed
 		self.gui = gui
 		self.matrix_unchanged = 1
 
-	def update_gui(self):
+	def update_gui(self, matrix):
 		if self.gui:
-			self.gui.Board.board = self.game.matrix
-			self.gui.Board.board_updated.emit(self.game.matrix)
-			time.sleep(speed)
+			self.gui.Board.board = matrix
+			self.gui.Board.board_updated.emit(matrix)
+			time.sleep(self.speed)
 		else: pass
 	
 	# ACTIONS
@@ -62,7 +54,7 @@ class AgentBase():
 		new_matrix = np.copy(matrix)
 		row = randint(0,3)
 		col = randint(0,3)
-		if any(0 in r for r in self.matrix):
+		if any(0 in r for r in matrix):
 			while new_matrix[row, col] != 0:# and any(0 in r for r in self.matrix): #make sure we don't erase a non-empty tile
 				row = randint(0,3)
 				col = randint(0,3)
@@ -105,141 +97,226 @@ class AgentBase():
 		new = self.transpose(new)
 		return new
 
-	def probe_move(self, matrix, action):
+	# EVAL
+	def probe_moves(self, matrix):
 		self.matrix_unchanged = True
-		new = np.zeros((4,4))
-		if action == 0:
-			new = self.left(matrix)
-		elif action == 1:
-			new = self.right(matrix)
-		elif action == 2:
-			new = self.up(matrix)
-		elif action == 3:
-			new = self.down(matrix)
+		smv = np.zeros(4)
+
+		left_m = self.left(matrix)
+		smv[0] = self.smoothness(left_m)
+
+		right_m = self.right(matrix)
+		smv[1] = self.smoothness(right_m)
+
+		up_m = self.up(matrix)
+		smv[2] = self.smoothness(up_m)
+
+		down_m = self.down(matrix)
+		smv[3] = self.smoothness(down_m)
+
+		return np.argmax(smv)
 
 	def smoothness(self, matrix):
-		pass
+		smoothness = 0
+		for i in range(4):
+			for j in range(4):
+				if matrix[i,j]:
+					value = np.log(matrix[i,j]) / np.log(2) if matrix[i,j] != 0 else 1
+					for direction in np.array([[1,0], [0, 1]]):
+						vector = direction
+						k,l = i,j
+						while (k<3 and l<3) and (matrix[k,l] != 0):
+								k += direction[0]
+								l += direction[1]
+
+						if matrix[k,l] != 0:
+							target = np.log(matrix[k,l]) / np.log(2)
+							smoothness += np.abs(value - target)
+		return smoothness
 
 	def monolithic(self, matrix):
-		pass
+		mono = 0
+		totals = [0, 0, 0, 0]
 
+		# up/down direction
+		for x in range(4):
+			current = 0
+			nextc = current+1
+			while nextc<4:
+				while nextc<4 and matrix[x,nextc] != 0:
+					nextc += 1
 
+				if nextc >= 4: nextc -= 1
+				currentValue = np.log(matrix[x][current]) / np.log(2) if matrix[x,current] != 0 else 0
+				nextcValue = np.log(matrix[x][nextc]) / np.log(2) if matrix[x,nextc] != 0 else 0
+
+				if currentValue > nextcValue:
+					totals[0] += nextcValue - currentValue
+				elif nextcValue > currentValue:
+					totals[1] += currentValue - nextcValue
+				
+				current = nextc
+				nextc += 1
+		
+		# left/right direction
+		for y in range(4):
+			current = 0
+			nextc = current+1
+			while nextc < 4:
+				while nextc < 4 and matrix[nextc,y] != 0:
+					nextc += 1
+
+				if nextc >= 4: nextc -= 1
+				currentValue = np.log(matrix[current,y]) / np.log(2) if matrix[current,y] != 0 else 0
+				nextcValue = np.log(matrix[nextc,y]) / np.log(2) if matrix[nextc,y] != 0 else 0
+
+				if currentValue > nextcValue:
+					totals[2] += nextcValue - currentValue
+				elif nextcValue > currentValue:
+					totals[3] += currentValue - nextcValue
+				
+				current = nextc
+				nextc += 1
+				
+		return max(totals[0], totals[1]) + max(totals[2], totals[3])
 
 
 #--------------------- Random Agent ---------------------
-bins=[0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
-tilebins=[4,8,16,32,64,128,256,512,1024,2048,4096]
+class RandomAgent(AgentBase):
+	def __init__(self, gui=None, speed=0.05):
+		super().__init__(gui, speed)
 
-def random_agent(jeu, gui=None, speed=0):
-	#Randomly plays the game
-	while jeu.u_dead_yet()==0:
-		move=np.random.randint(4)
-		if move == 0: jeu.up()
-		if move == 1: jeu.down()
-		if move == 2: jeu.left()
-		if move == 3: jeu.right()
-		update_gui(gui, jeu.matrix, speed)
+	def run(self, game=main()):
+		#Randomly plays the game
+		while game.u_dead_yet()==0:
+			move=np.random.randint(4)
+			if move == 0: game.up()
+			if move == 1: game.down()
+			if move == 2: game.left()
+			if move == 3: game.right()
+			super().update_gui(game.matrix)
 
-def simulate_random(N, gui=None, speed=0):
-	score=np.zeros(N)
-	for i in range(N):
-		game=main()
-		random_agent(game, gui, speed)
-		score[i]=game.score
-		# time.sleep(speed)
-	return score
-def plot_random(N):
-	score = simulate_random(N)
-	plt.hist(score, bins=bins)
-	plt.xticks(bins)
-	plt.show()
+	def simulate(self, N):
+		score=np.zeros(N)
+		maxitile=np.zeros(N)
+		for i in range(N):
+			game = main()
+			self.run(game=game)
+			score[i]=game.score
+			maxitile[i]=game.matrix.max()
+		return score, maxitile
+	
+	def silent_simu(self, N):
+		bins=[0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
+		score,_ = self.simulate(N)
+		plt.hist(score, bins=bins)
+		plt.xticks(bins)
+		plt.show()
 
 
 #--------------------- Basic Strategy Agent ---------------------
-def prio_agent(jeu, gui=None, speed=0):
-	#Player who follows priorities: right > up > down > left
-	while jeu.u_dead_yet() == 0: 
-		jeu.right()
-		update_gui(gui, jeu.matrix, speed)
-		if jeu.matrix_unchanged:
-			jeu.up()
-			update_gui(gui, jeu.matrix, speed)
-		if jeu.matrix_unchanged:
-			jeu.down()
-			update_gui(gui, jeu.matrix, speed)
-		if jeu.matrix_unchanged:
-			jeu.left()
-			update_gui(gui, jeu.matrix, speed)
+class PrioAgent(AgentBase):
+	def __init__(self, gui=None, speed=0.05):
+		super().__init__(gui, speed)
 
+	def run(self, game=main()):
+		while game.u_dead_yet() == 0: 
+			game.right()
+			super().update_gui(game.matrix)
+			if game.matrix_unchanged:
+				game.up()
+				super().update_gui(game.matrix)
+			if game.matrix_unchanged:
+				game.down()
+				super().update_gui(game.matrix)
+			if game.matrix_unchanged:
+				game.left()
+				super().update_gui(game.matrix)
 
-def simulate_prio(N, gui=None, speed=0):
-	score=np.zeros(N)
-	maxitile=np.zeros(N)
-	for i in range(N):
-		game=main()
-		prio_agent(game, gui, speed)
-		score[i]=game.score
-		maxitile[i]=game.matrix.max()
-	return score, maxitile
+	def simulate(self, N):
+		score=np.zeros(N)
+		maxitile=np.zeros(N)
+		for i in range(N):
+			game = main()
+			self.run(game=game)
+			score[i]=game.score
+			maxitile[i]=game.matrix.max()
+		return score, maxitile
+	
+	def silent_simu(self, N):
+		bins=[0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
+		tilebins=[4,8,16,32,64,128,256,512,1024,2048,4096]
+		#simulates and plots the results
+		score, maxitile = self.simulate(N)
+		#plots the score
+		# plt.hist(score, bins = bins)
+		# plt.xticks(bins)
 
-def plot_prio(N):
-	#simulates and plots the results
-	score, maxitile = simulate_prio(N)	
-	#plots the score
+		#plots the maximum tiles
+		# maxitile_repartition=np.zeros(len(tilebins))
+		# for i in range(len(tilebins)):
+		# 	maxitile_repartition[i]=np.sum(maxitile == tilebins[i])
+		# plt.bar(tilebins,maxitile_repartition)
 
-	"""plt.hist(score, bins = bins)
-	plt.xticks(bins)"""
-
-	#plots the maximum tiles
-	"""
-	maxitile_repartition=np.zeros(len(tilebins))
-	for i in range(len(tilebins)):
-		maxitile_repartition[i]=np.sum(maxitile == tilebins[i])
-	plt.bar(tilebins,maxitile_repartition)"""
-
-	plt.hist(maxitile)
-	plt.show()
-
+		plt.hist(maxitile)
+		plt.show()
 
 
 #--------------------- Other Strategy Agent ---------------------
-class OtherAgent():
-	def __init__(self, jeu, speed=0):
-		self.jeu = jeu
+class OtherAgent(AgentBase):
+	def __init__(self, gui=None, speed=0.05):
+		super().__init__(gui, speed)
 
-	def run(self, jeu=self.jeu, gui=None, speed=0):
-		#Player who follows priorities: right > up > down > left
-		while jeu.u_dead_yet() == 0: 
-			jeu.right()
-			update_gui(gui, jeu.matrix)
-			if jeu.matrix_unchanged:
-				jeu.up()
-				update_gui(gui, jeu.matrix)
-			if jeu.matrix_unchanged:
-				jeu.down()
-				update_gui(gui, jeu.matrix)
-			if jeu.matrix_unchanged:
-				jeu.left()
-				update_gui(gui, jeu.matrix)
+	def run(self, game=main()):
+		while game.u_dead_yet() == 0: 
+			game.left()
+			# print(best_moves)
+			super().update_gui(game.matrix)
+			if game.matrix_unchanged:
+				best_move = super().probe_moves(game.matrix)
+				print(best_move)
+				if best_move == 0: #then go back to prio
+					if game.matrix_unchanged:
+						game.up()
+						super().update_gui(game.matrix)
+					if game.matrix_unchanged:
+						game.down()
+						super().update_gui(game.matrix)
+					if game.matrix_unchanged:
+						game.right()
+						super().update_gui(game.matrix)
+				elif best_move == 1:
+					game.right()
+					super().update_gui(game.matrix)
+				elif best_move == 2:
+					game.up()
+					super().update_gui(game.matrix)
+				elif best_move == 3:
+					game.down()
+					super().update_gui(game.matrix)
 
-	def simulate(self, N, gui=None, speed=0):
+	def simulate(self, N):
 		score=np.zeros(N)
+		maxitile=np.zeros(N)
 		for i in range(N):
 			game = main()
-			self.run(game, gui, self.speed)
-			score[i] = game.score
-			# time.sleep(speed)
-		return score
+			self.run(game=game)
+			score[i]=game.score
+			maxitile[i]=game.matrix.max()
+		return score, maxitile
+
+	def silent_simu(self, N):
+		score, maxitile = self.simulate(N)
+		plt.hist(maxitile)
+		plt.show()
 
 
 
 
 
-
-
-"""
 if __name__ == "__main__":
 	app = QApplication(sys.argv)
 	window = MainWindow()
-	window.mutlithread_this(simulate_prio, 100, window)
-	app.exec_()"""
+	agent = PrioAgent(gui=window, speed=0.05)
+	window.mutlithread_this(agent.simulate, 10)
+	app.exec_()
