@@ -128,7 +128,7 @@ class AgentBase():
 
 #--------------------- Random Agent ---------------------
 bins=[0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
-
+tilebins=[4,8,16,32,64,128,256,512,1024,2048,4096]
 
 def random_agent(jeu, gui=None, speed=0):
 	#Randomly plays the game
@@ -174,17 +174,35 @@ def prio_agent(jeu, gui=None, speed=0):
 
 def simulate_prio(N, gui=None, speed=0):
 	score=np.zeros(N)
+	maxitile=np.zeros(N)
 	for i in range(N):
 		game=main()
 		prio_agent(game, gui, speed)
 		score[i]=game.score
+<<<<<<< HEAD
+		maxitile[i]=game.matrix.max()
+	return score, maxitile
+=======
 		# time.sleep(speed)
 	return score
+>>>>>>> c4a6b797bad049140a6379da071e648154269948
 
 def plot_prio(N):
-	score = simulate_prio(N)
-	plt.hist(score, bins=bins)
-	plt.xticks(bins)
+	#simulates and plots the results
+	score, maxitile = simulate_prio(N)	
+	#plots the score
+
+	"""plt.hist(score, bins = bins)
+	plt.xticks(bins)"""
+
+	#plots the maximum tiles
+	"""
+	maxitile_repartition=np.zeros(len(tilebins))
+	for i in range(len(tilebins)):
+		maxitile_repartition[i]=np.sum(maxitile == tilebins[i])
+	plt.bar(tilebins,maxitile_repartition)"""
+
+	plt.hist(maxitile)
 	plt.show()
 
 
@@ -221,34 +239,12 @@ class OtherAgent():
 
 
 
+
+
+
 """
-def basic_move(self):
-    if self.u_stuck_yet_H
-    #Does a move in a random direction
-    move=np.random.randint(4)
-    if move == 0: self.up()
-    if move == 1: self.down()
-    if move == 2: self.left()
-    if move == 3: self.right()
-
-def basic_agent(jeu):
-    while jeu.u_dead_yet()==0:
-        jeu.basic_move()
-
-def simulate_basic(N):
-    score=np.zeros(N)
-    for i in range(N):
-        game=main()
-        basic_agent(game)
-        score[i]=game.score
-def plot_basic(N):
-    bins=[0, 500, 1000, 1500, 2000, 2500, 3000]
-    simulate_basic(N)"""
-
-
-
 if __name__ == "__main__":
 	app = QApplication(sys.argv)
 	window = MainWindow()
 	window.mutlithread_this(simulate_prio, 100, window)
-	app.exec_()
+	app.exec_()"""
