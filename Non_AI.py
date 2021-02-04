@@ -30,12 +30,13 @@ def random_agent(jeu, gui=None):
 		if move == 3: jeu.right()
 		update_gui(gui, jeu.matrix)
 
-def simulate_random(N, gui=None):
+def simulate_random(N, gui=None, speed=0):
 	score=np.zeros(N)
 	for i in range(N):
 		game=main()
 		random_agent(game, gui)
 		score[i]=game.score
+		time.sleep(speed)
 	return score
 def plot_random(N):
 	score = simulate_random(N)
@@ -61,12 +62,13 @@ def prio_agent(jeu, gui=None):
 			update_gui(gui, jeu.matrix)
 
 
-def simulate_prio(N, gui=None):
+def simulate_prio(N, gui=None, speed=0):
 	score=np.zeros(N)
 	for i in range(N):
 		game=main()
 		prio_agent(game, gui)
 		score[i]=game.score
+		time.sleep(speed)
 	return score
 
 def plot_prio(N):
