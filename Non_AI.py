@@ -179,13 +179,8 @@ def simulate_prio(N, gui=None, speed=0):
 		game=main()
 		prio_agent(game, gui, speed)
 		score[i]=game.score
-<<<<<<< HEAD
 		maxitile[i]=game.matrix.max()
 	return score, maxitile
-=======
-		# time.sleep(speed)
-	return score
->>>>>>> c4a6b797bad049140a6379da071e648154269948
 
 def plot_prio(N):
 	#simulates and plots the results
