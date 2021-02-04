@@ -18,7 +18,7 @@ def update_gui(gui, board, speed=0.25):
 
 #--------------------- Random Agent ---------------------
 bins=[0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
-tilebins=[4,8,16,32,64,128,256,512,1024,2048,4095]
+tilebins=[4,8,16,32,64,128,256,512,1024,2048,4096]
 
 def random_agent(jeu, gui=None):
 	#Randomly plays the game
@@ -72,10 +72,21 @@ def simulate_prio(N, gui=None):
 	return score, maxitile
 
 def plot_prio(N):
-	score, maxitile = simulate_prio(N)
-	plt.hist(score, bins = bins)
-	plt.xticks(bins)
-#	plt.hist(maxitile, bins = tilebins)
+	#simulates and plots the results
+	score, maxitile = simulate_prio(N)	
+	#plots the score
+
+	"""plt.hist(score, bins = bins)
+	plt.xticks(bins)"""
+
+	#plots the maximum tiles
+	"""
+	maxitile_repartition=np.zeros(len(tilebins))
+	for i in range(len(tilebins)):
+		maxitile_repartition[i]=np.sum(maxitile == tilebins[i])
+	plt.bar(tilebins,maxitile_repartition)"""
+
+	plt.hist(maxitile)
 	plt.show()
 
 
