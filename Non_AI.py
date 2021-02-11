@@ -211,6 +211,7 @@ class RandomAgent(AgentBase):
 			maxitile[i]=game.matrix.max()
 		return score, maxitile
 	
+
 	def silent_simu(self, N):
 		bins=[0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
 		score,_ = self.simulate(N)
@@ -267,7 +268,86 @@ class PrioAgent(AgentBase):
 		plt.show()
 
 
-#--------------------- Other Strategy Agent ---------------------
+#--------------------- Evaluate next move using prefered tiles Agent ---------------------
+class FutureSerpentin(AgentBase):
+	def __init__(self, gui=None, speed=0.05):
+		super().__init__(gui, speed)	
+
+	def future_best_move(self, matrix):
+		self.matrix_unchanged = True
+		smv = np.zeros(4)
+
+		left_m = self.left(matrix)
+		smv[0] = self.evaluate(left_m)
+
+		right_m = self.right(matrix)
+		smv[1] = self.evaluate(right_m)
+
+		up_m = self.up(matrix)
+		smv[2] = self.evaluate(up_m)
+
+		down_m = self.down(matrix)
+		smv[3] = self.evaluate(down_m)
+
+		return np.argsort(smv) # The order of the best moves
+
+
+	# Evaluation of a matrix with priority tiles
+	def evaluate(self, matrix):
+		rating_matrix = np.array(([1,1,2,50],[1,1,3,30],[1,1,4,15],[1,1,6,10]))
+		return np.sum(rating_matrix * matrix)
+
+	# def do_best_move(self, game):
+	# 	if best_move == 0:
+	# 		game.up()
+	# 		super().update_gui(game.matrix)
+	# 	elif best_move == 1:
+	# 		game.right()
+	# 		super().update_gui(game.matrix)
+	# 	elif best_move == 2:
+	# 		game.up()
+	# 		super().update_gui(game.matrix)
+	# 	elif best_move == 3:
+	# 		game.down()
+
+	def run(self, game=main()):
+		count=3
+		while (game.u_dead_yet() == 0):
+			best_move = self.future_best_move(game.matrix)[count]
+			if best_move == 0:
+				game.up()
+				super().update_gui(game.matrix)
+			elif best_move == 1:
+				game.right()
+				super().update_gui(game.matrix)
+			elif best_move == 2:
+				game.up()
+				super().update_gui(game.matrix)
+			elif best_move == 3:
+				game.down()
+				super().update_gui(game.matrix)
+			if game.matrix_unchanged == 0:
+				count = 3
+			elif game.matrix_unchanged == 1:
+				count -= 1 
+			if count == -1:
+				count = 3
+
+	def simulate(self, N):
+		score=np.zeros(N)
+		maxitile=np.zeros(N)
+		for i in range(N):
+			game = main()
+			self.run(game=game)
+			score[i]=game.score
+			maxitile[i]=game.matrix.max()
+		return score, maxitile
+	def silent_simu(self, N):
+		tilebins=[4,8,16,32,64,128,256,512,1024,2048,4096]
+		score, maxitile = self.simulate(N)
+		plt.hist(maxitile)
+		plt.show
+	
 class OtherAgent(AgentBase):
 	def __init__(self, gui=None, speed=0.05):
 		super().__init__(gui, speed)
