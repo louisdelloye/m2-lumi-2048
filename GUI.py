@@ -53,7 +53,7 @@ class MainWindow(QMainWindow):
 		elif key == QtCore.Qt.Key_W: self.deal_w_it()
 		elif key == QtCore.Qt.Key_L: self.u_die()
 		elif key == QtCore.Qt.Key_Q: QtCore.QCoreApplication.quit() #quit app
-		self.Board.board_updated.emit(self.game.matrix) # condition if no moves
+		self.Board.board_updated.emit(self.game.matrix) # TODO condition if no moves dont update if no change
 		self.show_dialog()
 
 	def left(self):

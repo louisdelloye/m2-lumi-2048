@@ -3,7 +3,7 @@
 #--------------------- IMPORTS ---------------------
 import numpy as np
 import time
-from random import randint, choice
+from random import randint
 
 
 
@@ -72,7 +72,7 @@ class main():
 			while self.matrix[row, col] != 0:# and any(0 in r for r in self.matrix): #make sure we don't erase a non-empty tile
 				row = randint(0,3)
 				col = randint(0,3)
-			self.matrix[row,col] = choice([2, 4]) #add randomly a 2 or a 4
+			self.matrix[row,col] = np.random.choice([2, 4], p=[0.9,0.1]) #add randomly a 2 or a 4
 
 
 	def update_GUI(self):
