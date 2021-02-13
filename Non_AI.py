@@ -39,15 +39,15 @@ class AgentBase():
 			game.down()
 			self.update_gui(game.matrix)
 
-	def action(self, action, matrix):
+	def action(self, action, matrix, w_relou_add=False):
 		if action == 0: 
-			return self.left(matrix)
+			return self.left(matrix, w_relou_add=False)
 		elif action == 1:
-			return self.right(matrix)
+			return self.right(matrix, w_relou_add=False)
 		elif action == 2:
-			return self.up(matrix)
+			return self.up(matrix, w_relou_add=False)
 		elif action == 3:
-			return self.down(matrix)
+			return self.down(matrix, w_relou_add=False)
 
 	# ACTIONS
 	def stack(self, matrix):
@@ -86,37 +86,50 @@ class AgentBase():
 			new_matrix[row,col] = np.random.choice([2, 4], p=[0.9, 0.1]) #add randomly a 2 or a 4
 		return new_matrix
 
-	def stack_AND_combine(self, matrix):
+	def relou_add(self, matrix):
+		#place tile at the most incovenient place for serpentin
+		new_matrix = np.copy(matrix)
+		col = randint(0,3)
+		if any(0 in matrix[:,col]):
+			while new_matrix[3, col] != 0:
+				col = randint(0,3)
+			new_matrix[row,col] = np.random.choice([2, 4], p=[0.9, 0.1]) #add randomly a 2 or a 4
+		return new_matrix
+
+	def stack_AND_combine(self, matrix, w_relou_add=False):
 		old = np.copy(matrix)
 		new = self.stack(matrix)
 		new = self.recombine(new)
 		new = self.stack(new)
 		if not np.allclose(old, new):
-			new = self.add_tile(new) # add random tile if changes happened
-			self.matrix_unchanged = False
+			if w_relou_add:
+				relou_add(matrix)
+			else:
+				new = self.add_tile(new) # add random tile if changes happened
+				self.matrix_unchanged = False
 		else: self.matrix_unchanged = True
 		return new
 
-	def left(self, matrix):
+	def left(self, matrix, w_relou_add=False):
 			# Move all to left
-			return self.stack_AND_combine(matrix)
+			return self.stack_AND_combine(matrix, w_relou_add=False)
 		
-	def right(self, matrix):
+	def right(self, matrix, w_relou_add=False):
 		new = self.reverse(matrix) #by flipping it we just have to the same as for left()
-		new = self.stack_AND_combine(new)
+		new = self.stack_AND_combine(new, w_relou_add=False)
 		new = self.reverse(new)
 		return new
 
-	def up(self, matrix):
+	def up(self, matrix, w_relou_add=False):
 		new = self.transpose(matrix)
-		new = self.stack_AND_combine(new)
+		new = self.stack_AND_combine(new, w_relou_add=False)
 		new = self.transpose(new)
 		return new
 
-	def down(self, matrix):
+	def down(self, matrix, w_relou_add=False):
 		new = self.transpose(matrix)
 		new = self.reverse(new) 
-		new = self.stack_AND_combine(new)
+		new = self.stack_AND_combine(new, w_relou_add=False)
 		new = self.reverse(new)
 		new = self.transpose(new)
 		return new
@@ -315,7 +328,7 @@ class FutureSerpentin(AgentBase):
 		while (game.u_dead_yet() == 0):
 			best_move = self.future_best_move(game.matrix)[count]
 			if best_move == 0:
-				game.up()
+				game.left()
 				super().update_gui(game.matrix)
 			elif best_move == 1:
 				game.right()
@@ -337,17 +350,21 @@ class FutureSerpentin(AgentBase):
 		score=np.zeros(N)
 		maxitile=np.zeros(N)
 		for i in range(N):
+			print(f"game {i} done")
 			game = main()
 			self.run(game=game)
 			score[i]=game.score
 			maxitile[i]=game.matrix.max()
 		return score, maxitile
+
 	def silent_simu(self, N):
 		tilebins=[4,8,16,32,64,128,256,512,1024,2048,4096]
 		score, maxitile = self.simulate(N)
 		plt.hist(maxitile)
-		plt.show
+		plt.show()
 	
+
+#--------------------- Other Agent ---------------------
 class OtherAgent(AgentBase):
 	def __init__(self, gui=None, speed=0.05):
 		super().__init__(gui, speed)
@@ -524,24 +541,147 @@ class CarloAgent(AgentBase):
 		return best_move
 			
 	def final_score(self, matrix):
-		nz_weight = 10 #10
-		max_weight = 3 #1
-		max_pos_weight = 0
+		# nz_weight = 10 #10
+		# max_weight = 0 #1
+		# max_pos_weight = 10 #1000
+		# smv_weight = 0.1
+		# mono_weight = 0
+		# return np.max(matrix) * max_weight - np.count_nonzero(matrix) * nz_weight \
+		# 	+ np.argmax(matrix) * max_pos_weight - smv_weight * super().smoothness(matrix) \
+		# 	+ mono_weight * super().monolithic(matrix)
+
+		m = np.ones((4,4))
+		for i in range(4):
+			for j in range(4):
+				if i % 2 == 0:
+				# 	m[i,j] *= (15-i-j)
+				# else: m[i,3-j] *= (15-i-3+j)
+				# 	m[i,j] = 0.1**(i+j)
+				# else: m[i,3-j] = 0.1**(i+3-j)
+					m[i,j] = 2**(15-i-j)
+				else: m[i,3-j] = 2**(15-i-3+j)
+		return np.sum(matrix * m)
+
+	
+#--------------------- Monte Carlo Snake Agent ---------------------
+class CarloTheSnakeAgent(AgentBase):
+	def __init__(self, gui=None, speed=0.05, max_depth=2):
+		super().__init__(gui, speed)
+		self.max_depth = max_depth
+		self.snake_matrix = np.ones((4,4))
+		for i in range(4):
+			for j in range(4):
+				if i % 2 == 0:
+				# 	self.snake_matrix[i,j] *= (15-i-j)
+				# else: self.snake_matrix[i,3-j] *= (15-i-3+j)
+					self.snake_matrix[i,j] = 0.1**(i+j)
+				else: self.snake_matrix[i,3-j] = 0.1**(i+3-j)
+				# 	self.snake_matrix[i,j] = 2**(15-i-j)
+				# else: self.snake_matrix[i,3-j] = 2**(15-i-3+j)
+	
+	def run(self, game=main()):
+		while game.u_dead_yet() == 0: 
+			best_move = self.probe_move(game.matrix)
+			print(best_move)
+			self.move(best_move, game)
+
+	def simulate(self, N):
+		score = np.zeros(N)
+		maxitile = np.zeros(N)
+		for i in range(N):
+			print(f"game {i} done")
+			game  =  main()
+			self.run(game = game)
+			score[i] = game.score
+			maxitile[i] = game.matrix.max()
+		return score, maxitile
+
+	def silent_simu(self, N):
+		self.silent = True
+		score, maxitile = self.simulate(N)
+		self.silent = False
+		plt.hist(maxitile)
+		plt.show()
+	
+	def go_deep(self, matrix, depth):
+		if depth == self.max_depth:
+			return self.snake_eval(matrix)
+		else:
+			return self.calc_score(matrix, depth)
+			# total = 0
+			# for i in range(4):
+			# 	total += self.calc_score(super().action(i, matrix), depth)
+			# 	print(total)
+			# return total
+
+
+	def calc_score(self, matrix, depth):
+		score = 0
+		best_score = -1e18
+		snake_evals = np.zeros(4)
+		for i in range(4):
+			m = super().action(i, matrix)#, w_relou_add=True)
+			snake_evals[i] = self.final_score(m) #self.snake_eval(m)
+
+		best_evals = np.argsort(snake_evals)
+		for i in best_evals[-2:]: #select the best two moves to probe
+			m = super().action(i, matrix)
+			if not np.allclose(matrix, m):
+				score += self.go_deep(m, depth + 1)
+				# best_score = max(score, best_score)
+		return score
+
+	def probe_move(self, matrix):
+		self.matrix_unchanged = True
+		depth = 0
+		score = -1e18
+		best_score = -1e18
+		best_move = 0
+		snake_evals = np.zeros(4)
+		m = np.copy(matrix)
+
+		for i in range(4):
+			m = super().action(i, matrix)#, w_relou_add=True)
+			if np.allclose(m, matrix):
+				snake_evals[i] = -1e18
+			else: snake_evals[i] = self.final_score(m) #self.snake_eval(m)
+
+		best_evals = np.argsort(snake_evals)
+		for i in best_evals[-2:]:
+			m = super().action(i, matrix)
+			score = self.go_deep(m, 0)
+			if score > best_score:
+				best_score = score
+				best_move = i
+		return best_move
+			
+	def snake_eval(self, matrix):
+		# rating_matrix = np.array(([1,1,2,50],[1,1,3,30],[1,1,4,15],[1,1,6,10]))
+		# return np.sum(rating_matrix * matrix)
+		return np.sum(matrix * self.snake_matrix)
+
+	def final_score(self, matrix):
+		nz_weight = 2.7 #10
+		max_weight = 1 #1
+		max_pos_weight = 0 #1000
 		smv_weight = 0.1
-		mono_weight = 1
+		mono_weight = 0
+		snake_weight = 0 #0 #1
+
 		return np.max(matrix) * max_weight - np.count_nonzero(matrix) * nz_weight \
 			+ np.argmax(matrix) * max_pos_weight - smv_weight * super().smoothness(matrix) \
-			+ mono_weight * super().monolithic(matrix)
-	
+			+ mono_weight * super().monolithic(matrix) + snake_weight * self.snake_eval(matrix)
 
 
 
-agent = CarloAgent()
+# agent = CarloTheSnakeAgent()
+agent = FutureSerpentin()
 agent.silent_simu(100)
 
 # if __name__ == "__main__":
 # 	app = QApplication(sys.argv)
 # 	window = MainWindow()
-# 	agent = CarloAgent(gui=window, speed=0.025, max_depth=2)
+# 	agent = CarloTheSnakeAgent(gui=window, speed=0.005, max_depth=9)
+# 	# agent = FutureSerpentin(gui=window, speed=0.025)
 # 	window.mutlithread_this(agent.simulate, 10)
 # 	app.exec_()

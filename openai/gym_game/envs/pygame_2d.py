@@ -160,18 +160,18 @@ class PyGame2D:
 		reward = 0
 		smooth_weight = 5
 		mono_weight = 10
-		non_z_weight = 50
-		max_weight = 10
+		non_z_weight = 0.01 #50
+		max_weight = 0
 
 		matrix = self.game.matrix
 
 		if self.game.u_dead_yet() == -1:
 			#if you lost that's bad but not that bad if you manage to go quite far
 			# ? Do we want to keep such a condition actually ?
-			reward = -1000000 + self.game.score
+			reward = -1e18 + self.game.score
 		elif self.game.u_dead_yet() == 1:
 			#if you won now that's great !
-			reward = 1000000
+			reward = 1e18
 		
 		#increase reward based on max number on the board
 		maxi = np.max(matrix)
@@ -249,10 +249,22 @@ class PyGame2D:
 		# 	max_pos_weight = 1000
 		# else: max_pos_weight = 0
 		max_pos_weight = 0
+
+		m = np.ones((4,4))
+		for i in range(4):
+			for j in range(4):
+				if i % 2 == 0:
+					m[i,j] *= (15-i-j)
+				else: m[i,3-j] *= (15-i-3+j)
+				# 	m[i,j] = 0.1**(i+j)
+				# else: m[i,3-j] = 0.1**(i+3-j)
+				# 	m[i,j] = 2**(15-i-j)
+				# else: m[i,3-j] = 2**(15-i-3+j)
+		return 1e-4 * np.sum(matrix * m) - non_z_weight * non_z
 		
-		#TOTAL
-		reward += mono_weight * mono + max_weight * maxi - smooth_weight * smoothness - non_z_weight * non_z + max_pos_weight
-		return reward
+		# #TOTAL
+		# reward += mono_weight * mono + max_weight * maxi - smooth_weight * smoothness - non_z_weight * non_z + max_pos_weight
+		# return reward
 
 	def is_done(self):
 		#TODO add condition to prevent pressing 200 times left and nothing happening maybe ?

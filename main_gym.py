@@ -59,7 +59,7 @@ def simulate(g):
 if __name__ == "__main__":
 	env = gym.make("2048-v0")
 	MAX_EPISODES = 999 #9999
-	MAX_TRY = 100 #1000
+	MAX_TRY = 1000 #1000
 	epsilon = 1
 	epsilon_decay = 0.99
 	learning_rate = 0.2
