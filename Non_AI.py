@@ -307,21 +307,8 @@ class FutureSerpentin(AgentBase):
 
 	# Evaluation of a matrix with priority tiles
 	def evaluate(self, matrix):
-		rating_matrix = np.array(([1,1,2,50],[1,1,3,30],[1,1,4,15],[1,1,6,10]))
+		rating_matrix = np.array(([0,8,10,500],[1,6,25,300],[2,5,35,150],[3,4,50,80]))
 		return np.sum(rating_matrix * matrix)
-
-	# def do_best_move(self, game):
-	# 	if best_move == 0:
-	# 		game.up()
-	# 		super().update_gui(game.matrix)
-	# 	elif best_move == 1:
-	# 		game.right()
-	# 		super().update_gui(game.matrix)
-	# 	elif best_move == 2:
-	# 		game.up()
-	# 		super().update_gui(game.matrix)
-	# 	elif best_move == 3:
-	# 		game.down()
 
 	def run(self, game=main()):
 		count=3
@@ -674,14 +661,14 @@ class CarloTheSnakeAgent(AgentBase):
 
 
 
-# agent = CarloTheSnakeAgent()
-agent = FutureSerpentin()
+
+agent = CarloTheSnakeAgent()
 agent.silent_simu(100)
 
-# if __name__ == "__main__":
-# 	app = QApplication(sys.argv)
-# 	window = MainWindow()
-# 	agent = CarloTheSnakeAgent(gui=window, speed=0.005, max_depth=9)
-# 	# agent = FutureSerpentin(gui=window, speed=0.025)
-# 	window.mutlithread_this(agent.simulate, 10)
-# 	app.exec_()
+if __name__ == "__main__":
+	app = QApplication(sys.argv)
+	window = MainWindow()
+	agent = CarloTheSnakeAgent(gui=window, speed=0.005, max_depth=9)
+	# agent = FutureSerpentin(gui=window, speed=0.025)
+	window.mutlithread_this(agent.simulate, 10)
+	app.exec_()
