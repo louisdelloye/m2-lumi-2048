@@ -93,7 +93,7 @@ class AgentBase():
 		if any(0 in matrix[:,col]):
 			while new_matrix[3, col] != 0:
 				col = randint(0,3)
-			new_matrix[row,col] = np.random.choice([2, 4], p=[0.9, 0.1]) #add randomly a 2 or a 4
+			new_matrix[col] = np.random.choice([2, 4], p=[0.9, 0.1]) #add randomly a 2 or a 4
 		return new_matrix
 
 	def stack_AND_combine(self, matrix, w_relou_add=False):
@@ -103,7 +103,7 @@ class AgentBase():
 		new = self.stack(new)
 		if not np.allclose(old, new):
 			if w_relou_add:
-				relou_add(matrix)
+				self.relou_add(matrix)
 			else:
 				new = self.add_tile(new) # add random tile if changes happened
 				self.matrix_unchanged = False
@@ -600,7 +600,6 @@ class CarloTheSnakeAgent(AgentBase):
 			# 	total += self.calc_score(super().action(i, matrix), depth)
 			# 	print(total)
 			# return total
-
 
 	def calc_score(self, matrix, depth):
 		score = 0

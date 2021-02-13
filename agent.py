@@ -53,7 +53,7 @@ class Agent():
       if self.silent: agent.silent_simu(self.nb_game)
       else: window.mutlithread_this(agent.simulate, self.nb_game)
 
-      if not self.ilent: app.exec_()
+      if not self.silent: app.exec_()
 
 
 if __name__ == "__main__":

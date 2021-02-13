@@ -169,7 +169,6 @@ class WLMessage(QDialog):
 		QtCore.QCoreApplication.quit() #quit application
 
 
-
 class Board(QWidget):
 	"""Main Grid Widget"""
 	board_updated = QtCore.pyqtSignal(np.ndarray) # slot
@@ -185,7 +184,6 @@ class Board(QWidget):
 
 		grid.setContentsMargins(0, 0, 0, 0)
 		self.setLayout(grid)
-
 
 
 class Tile(QLabel):
@@ -230,7 +228,6 @@ class Tile(QLabel):
 		self.show()
 		
 
-
 class Worker(QRunnable):
 	'''
 	Worker thread
@@ -258,7 +255,6 @@ class Worker(QRunnable):
 		'''
 		self.fn(*self.args, **self.kwargs)
 
-#--------------------- RUN ---------------------
 
 
 if __name__ == "__main__":

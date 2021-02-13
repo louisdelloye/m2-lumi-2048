@@ -41,7 +41,6 @@ class main():
 		if self.no_GUI: self.update_GUI()
 
 
-
 	#--------- ACTIONS ON MATRIX ---------
 	def stack(self):
 		stacked_matrix = np.zeros((4,4))
@@ -53,7 +52,6 @@ class main():
 					pos +=1
 		
 		self.matrix = stacked_matrix
-
 
 	def recombine(self):
 		for i in range(4):
@@ -80,7 +78,6 @@ class main():
 				row = randint(0,3)
 				col = randint(0,3)
 			self.matrix[row,col] = np.random.choice([2, 4], p=[0.9,0.1]) #add randomly a 2 or a 4
-
 
 	def update_GUI(self):
 		# keyboard.is_pressed('up', lambda: print('dick'))
@@ -133,7 +130,6 @@ class main():
 			self.stack_AND_combine()
 			if self.no_GUI: self.update_GUI()
 		
-
 	def right(self):
 		if self.DEBUG: print("right")
 
