@@ -5,24 +5,31 @@ import numpy as np
 import time
 from random import randint
 
+from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow, QDialog, QStackedLayout, QGridLayout, QHBoxLayout, QVBoxLayout, QLabel, QPushButton
+from PyQt5.QtCore import QRunnable, QThreadPool
+from PyQt5 import QtCore, QtWidgets, QtGui, Qt
+
+# import keyboard
+
+import sys
 
 
 #--------------------- METHODS ---------------------
 
 class main():
-	def __init__(self, DEBUG=False):
+	def __init__(self, DEBUG=False, no_GUI=False):
 		self.DEBUG = DEBUG
 		self.matrix = np.zeros((4,4))
 		self.score = 0
-		self.start()
+		self.no_GUI = no_GUI
 		self.matrix_unchanged = 0
+		self.start()
 		
 
 	def start(self):
 		self.matrix = np.zeros((4,4))
 		self.score = 0
 		
-
 		#add 2 random 2
 		row = randint(0,3)
 		col = randint(0,3)
@@ -31,7 +38,7 @@ class main():
 			row = randint(0,3)
 			col = randint(0,3)
 		self.matrix[row,col] = 2
-		self.update_GUI()
+		if self.no_GUI: self.update_GUI()
 
 
 
@@ -76,8 +83,9 @@ class main():
 
 
 	def update_GUI(self):
+		# keyboard.is_pressed('up', lambda: print('dick'))
+		print(self.matrix) # Show game in console, only for debugging purposes
 		if self.DEBUG:
-			print(self.matrix) # Show game in console, only for debugging purposes
 			time.sleep(2) #wait 2 seconds
 			actions = [self.left, self.right, self.up, self.down]
 			actions[randint(0,3)]() #simulate an action
@@ -174,6 +182,29 @@ class main():
 
 
 if __name__ == "__main__":
-	game = main(DEBUG=True)
+	class MainWindow(QMainWindow):
+		def __init__(self):
+			super().__init__()
+			self.game = main(no_GUI=True)
+			self.show()
+			self.setWindowOpacity(0.)
+		
+		def keyPressEvent(self, event):
+			key = event.key()
+
+			# Handle key bindind
+			if key == QtCore.Qt.Key_Up: self.game.up()
+			elif key == QtCore.Qt.Key_Down: self.game.down()
+			elif key == QtCore.Qt.Key_Left: self.game.left()
+			elif key == QtCore.Qt.Key_Right: self.game.right()
+			elif key == QtCore.Qt.Key_W: self.game.deal_w_it()
+			elif key == QtCore.Qt.Key_L: self.game.u_die()
+			elif key == QtCore.Qt.Key_Q: QtCore.QCoreApplication.quit() #quit app
+	
+	app = QApplication(sys.argv)
+	window = MainWindow()
+	app.exec_()
+	# game = main(no_GUI=True)
+	# game = main(DEBUG=True)
 
 # independent files
