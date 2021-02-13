@@ -106,7 +106,7 @@ class main():
 		return 0
 
 
-	#--------- MOVES ---------
+	#--------- MOVES ---------	
 	def stack_AND_combine(self):
 		old = np.copy(self.matrix)
 		self.stack()
