@@ -131,7 +131,7 @@ class main():
 		if self.u_dead_yet() not in [-1, 1]:
 			# Move all to left
 			self.stack_AND_combine()
-			self.update_GUI()
+			if self.no_GUI: self.update_GUI()
 		
 
 	def right(self):
@@ -142,7 +142,7 @@ class main():
 			self.reverse() #by flipping it we just have to the same as for left()
 			self.stack_AND_combine()
 			self.reverse()
-			self.update_GUI()
+			if self.no_GUI: self.update_GUI()
 
 	def up(self):
 		if self.DEBUG: print("up")
@@ -152,7 +152,7 @@ class main():
 			self.transpose()
 			self.stack_AND_combine()
 			self.transpose()
-			self.update_GUI()
+			if self.no_GUI: self.update_GUI()
 
 	def down(self):
 		if self.DEBUG: print("down")
@@ -164,7 +164,7 @@ class main():
 			self.stack_AND_combine()
 			self.reverse()
 			self.transpose()
-			self.update_GUI()
+			if self.no_GUI: self.update_GUI()
 
 	def boom_i_almost_won(self):
 		self.matrix[0,0] = 1024 

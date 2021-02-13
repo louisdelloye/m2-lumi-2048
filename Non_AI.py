@@ -567,9 +567,9 @@ class CarloTheSnakeAgent(AgentBase):
 				# else: self.snake_matrix[i,3-j] = 2**(15-i-3+j)
 	
 	def run(self, game=main()):
-		while game.u_dead_yet() == 0: 
+		while game.u_dead_yet() == 0:
 			best_move = self.probe_move(game.matrix)
-			print(best_move)
+			# print(best_move)
 			self.move(best_move, game)
 
 	def simulate(self, N):
@@ -648,12 +648,12 @@ class CarloTheSnakeAgent(AgentBase):
 		return np.sum(matrix * self.snake_matrix)
 
 	def final_score(self, matrix):
-		nz_weight = 2.7 #10
-		max_weight = 1 #1
+		nz_weight = 0 #2.7 #10
+		max_weight = 0 #1 #1
 		max_pos_weight = 0 #1000
-		smv_weight = 0.1
-		mono_weight = 0
-		snake_weight = 0 #0 #1
+		smv_weight = 0 #0.1
+		mono_weight = 0 #0
+		snake_weight = 1 #0 #1
 
 		return np.max(matrix) * max_weight - np.count_nonzero(matrix) * nz_weight \
 			+ np.argmax(matrix) * max_pos_weight - smv_weight * super().smoothness(matrix) \
@@ -662,13 +662,13 @@ class CarloTheSnakeAgent(AgentBase):
 
 
 
-agent = CarloTheSnakeAgent()
-agent.silent_simu(100)
-
 if __name__ == "__main__":
+	# agent = CarloTheSnakeAgent()
+	# agent.silent_simu(100)
+
 	app = QApplication(sys.argv)
 	window = MainWindow()
-	agent = CarloTheSnakeAgent(gui=window, speed=0.005, max_depth=9)
+	agent = CarloTheSnakeAgent(gui=window, speed=0.025, max_depth=8)
 	# agent = FutureSerpentin(gui=window, speed=0.025)
 	window.mutlithread_this(agent.simulate, 10)
 	app.exec_()
