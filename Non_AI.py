@@ -294,28 +294,15 @@ class FutureSerpentin(AgentBase):
 
 	# Evaluation of a matrix with priority tiles
 	def evaluate(self, matrix):
-		rating_matrix = np.array(([1,1,2,50],[1,1,3,30],[1,1,4,15],[1,1,6,10]))
+		rating_matrix = np.array(([0,8,10,500],[1,6,25,300],[2,5,35,150],[3,4,50,80]))
 		return np.sum(rating_matrix * matrix)
-
-	# def do_best_move(self, game):
-	# 	if best_move == 0:
-	# 		game.up()
-	# 		super().update_gui(game.matrix)
-	# 	elif best_move == 1:
-	# 		game.right()
-	# 		super().update_gui(game.matrix)
-	# 	elif best_move == 2:
-	# 		game.up()
-	# 		super().update_gui(game.matrix)
-	# 	elif best_move == 3:
-	# 		game.down()
 
 	def run(self, game=main()):
 		count=3
 		while (game.u_dead_yet() == 0):
 			best_move = self.future_best_move(game.matrix)[count]
 			if best_move == 0:
-				game.up()
+				game.left()
 				super().update_gui(game.matrix)
 			elif best_move == 1:
 				game.right()
@@ -346,7 +333,7 @@ class FutureSerpentin(AgentBase):
 		tilebins=[4,8,16,32,64,128,256,512,1024,2048,4096]
 		score, maxitile = self.simulate(N)
 		plt.hist(maxitile)
-		plt.show
+		plt.show()
 	
 class OtherAgent(AgentBase):
 	def __init__(self, gui=None, speed=0.05):
@@ -536,12 +523,12 @@ class CarloAgent(AgentBase):
 
 
 
-agent = CarloAgent()
+agent = FutureSerpentin()
 agent.silent_simu(100)
 
 # if __name__ == "__main__":
 # 	app = QApplication(sys.argv)
 # 	window = MainWindow()
-# 	agent = CarloAgent(gui=window, speed=0.025, max_depth=2)
+# 	agent = FutureSerpentin(gui=window, speed=0.025)
 # 	window.mutlithread_this(agent.simulate, 10)
 # 	app.exec_()
