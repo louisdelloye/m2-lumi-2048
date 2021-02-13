@@ -204,7 +204,3 @@ if __name__ == "__main__":
 	app = QApplication(sys.argv)
 	window = MainWindow()
 	app.exec_()
-	# game = main(no_GUI=True)
-	# game = main(DEBUG=True)
-
-# independent files
