@@ -134,6 +134,25 @@ class AgentBase():
 		new = self.transpose(new)
 		return new
 
+
+	def u_stuck_yet_H(self, m):
+		#check for possible moves in horizontal direction
+		for i in range(4):
+			for j in range(3):
+				if m[i,j] == m[i,j+1]: return False
+		return True
+
+	def u_stuck_yet_V(self, m):
+		#check for possible moves in the vertical direction
+		return self.u_stuck_yet_H(np.transpose(m))
+
+	def u_dead_yet(self, matrix):
+		if not any(0 in row for row in matrix) and self.u_stuck_yet_H(matrix) and self.u_stuck_yet_V(matrix):
+			return -1
+		elif any(2048 in row for row in matrix):
+			return 1
+		return 0
+
 	def smoothness(self, matrix):
 		smoothness = 0
 		for i in range(4):
@@ -197,6 +216,7 @@ class AgentBase():
 					nextc += 1
 					
 			return max(totals[0], totals[1]) + max(totals[2], totals[3])
+
 
 
 #--------------------- Random Agent ---------------------
@@ -450,7 +470,7 @@ class OtherAgent(AgentBase):
 
 
 #--------------------- Monte Carlo Strategy Agent ---------------------
-class CarloAgent(AgentBase):
+class CarloFullAgent(AgentBase):
 	def __init__(self, gui=None, speed=0.05, max_depth=1):
 		super().__init__(gui, speed)
 		self.max_depth = max_depth
@@ -595,11 +615,6 @@ class CarloTheSnakeAgent(AgentBase):
 			return self.snake_eval(matrix)
 		else:
 			return self.calc_score(matrix, depth)
-			# total = 0
-			# for i in range(4):
-			# 	total += self.calc_score(super().action(i, matrix), depth)
-			# 	print(total)
-			# return total
 
 	def calc_score(self, matrix, depth):
 		score = 0
@@ -607,7 +622,7 @@ class CarloTheSnakeAgent(AgentBase):
 		snake_evals = np.zeros(4)
 		for i in range(4):
 			m = super().action(i, matrix)#, w_relou_add=True)
-			snake_evals[i] = self.final_score(m) #self.snake_eval(m)
+			snake_evals[i] = self.snake_eval(m)
 
 		best_evals = np.argsort(snake_evals)
 		for i in best_evals[-2:]: #select the best two moves to probe
@@ -630,12 +645,14 @@ class CarloTheSnakeAgent(AgentBase):
 			m = super().action(i, matrix)#, w_relou_add=True)
 			if np.allclose(m, matrix):
 				snake_evals[i] = -1e18
-			else: snake_evals[i] = self.final_score(m) #self.snake_eval(m)
+			else: snake_evals[i] = self.snake_eval(m)
 
 		best_evals = np.argsort(snake_evals)
 		for i in best_evals[-2:]:
 			m = super().action(i, matrix)
-			score = self.go_deep(m, 0)
+			if np.allclose(m, matrix): score = -1e18
+			else: score = self.go_deep(m, 0)
+			
 			if score > best_score:
 				best_score = score
 				best_move = i
@@ -646,28 +663,246 @@ class CarloTheSnakeAgent(AgentBase):
 		# return np.sum(rating_matrix * matrix)
 		return np.sum(matrix * self.snake_matrix)
 
+
+#--------------------- Monte Carlo Complex Agent ---------------------
+class CarloAgent(AgentBase):
+	def __init__(self, gui=None, speed=0.05, max_depth=2):
+		super().__init__(gui, speed)
+		self.max_depth = max_depth
+		self.snake_matrix = np.ones((4,4))
+		for i in range(4):
+			for j in range(4):
+				if i % 2 == 0:
+				# 	self.snake_matrix[i,j] *= (15-i-j)
+				# else: self.snake_matrix[i,3-j] *= (15-i-3+j)
+					self.snake_matrix[i,j] = 0.1**(i+j)
+				else: self.snake_matrix[i,3-j] = 0.1**(i+3-j)
+				# 	self.snake_matrix[i,j] = 2**(15-i-j)
+				# else: self.snake_matrix[i,3-j] = 2**(15-i-3+j)
+	
+	def run(self, game=main()):
+		while game.u_dead_yet() == 0:
+			best_move = self.probe_move(game.matrix)
+			# print(best_move)
+			self.move(best_move, game)
+
+	def simulate(self, N):
+		score = np.zeros(N)
+		maxitile = np.zeros(N)
+		for i in range(N):
+			print(f"game {i} done")
+			game  =  main()
+			self.run(game = game)
+			score[i] = game.score
+			maxitile[i] = game.matrix.max()
+		return score, maxitile
+
+	def silent_simu(self, N):
+		self.silent = True
+		score, maxitile = self.simulate(N)
+		self.silent = False
+		plt.hist(maxitile)
+		plt.show()
+	
+	def go_deep(self, matrix, depth):
+		if depth == self.max_depth:
+			return self.final_score(matrix)
+		else:
+			return self.calc_score(matrix, depth)
+			# total = 0
+			# for i in range(4):
+			# 	total += self.calc_score(super().action(i, matrix), depth)
+			# 	print(total)
+			# return total
+
+	def calc_score(self, matrix, depth):
+		score = 0
+		best_score = -1e18
+		snake_evals = np.zeros(4)
+		for i in range(4):
+			m = super().action(i, matrix)#, w_relou_add=True)
+			snake_evals[i] = self.final_score(m)
+
+		best_evals = np.argsort(snake_evals)
+		for i in best_evals[-2:]: #select the best two moves to probe
+			m = super().action(i, matrix)
+			if not np.allclose(matrix, m):
+				score += self.go_deep(m, depth + 1)
+				# best_score = max(score, best_score)
+		return score
+
+	def probe_move(self, matrix):
+		self.matrix_unchanged = True
+		depth = 0
+		score = -1e18
+		best_score = -1e18
+		best_move = 0
+		snake_evals = np.zeros(4)
+		m = np.copy(matrix)
+
+		for i in range(4):
+			m = super().action(i, matrix)#, w_relou_add=True)
+			if np.allclose(m, matrix):
+				snake_evals[i] = -1e18
+			else: snake_evals[i] = self.final_score(m)
+
+		best_evals = np.argsort(snake_evals)
+		for i in best_evals[-2:]:
+			m = super().action(i, matrix)
+			if np.allclose(m, matrix): score = -1e18
+			else: score = self.go_deep(m, 0)
+			
+			if score > best_score:
+				best_score = score
+				best_move = i
+		return best_move
+
 	def final_score(self, matrix):
-		nz_weight = 0 #2.7 #10
-		max_weight = 0 #1 #1
+		nz_weight = 2.7 #10
+		max_weight = 1 #1
 		max_pos_weight = 0 #1000
-		smv_weight = 0 #0.1
-		mono_weight = 0 #0
-		snake_weight = 1 #0 #1
+		smv_weight = 0.1
+		#mono_weight = 0
 
 		return np.max(matrix) * max_weight - np.count_nonzero(matrix) * nz_weight \
 			+ np.argmax(matrix) * max_pos_weight - smv_weight * super().smoothness(matrix) \
-			+ mono_weight * super().monolithic(matrix) + snake_weight * self.snake_eval(matrix)
+			#+ mono_weight * super().monolithic(matrix)
+
+
+#--------------------- Monte Carlo Double Agent ---------------------
+class CarloDoubleAgent(AgentBase):
+	def __init__(self, gui=None, speed=0.05, max_depth=2):
+		super().__init__(gui, speed)
+		self.max_depth = max_depth
+		self.snake_matrix = np.ones((4,4))
+		for i in range(4):
+			for j in range(4):
+				if i % 2 == 0:
+				# 	self.snake_matrix[i,j] *= (15-i-j)
+				# else: self.snake_matrix[i,3-j] *= (15-i-3+j)
+					self.snake_matrix[i,j] = 0.1**(i+j)
+				else: self.snake_matrix[i,3-j] = 0.1**(i+3-j)
+				# 	self.snake_matrix[i,j] = 2**(15-i-j)
+				# else: self.snake_matrix[i,3-j] = 2**(15-i-3+j)
+	
+	def run(self, game=main()):
+		self.game = game
+		while self.game.u_dead_yet() == 0:
+			best_move = self.probe_move(self.game.matrix)
+			# print(best_move)
+			self.move(best_move, game)
+
+	def simulate(self, N):
+		score = np.zeros(N)
+		maxitile = np.zeros(N)
+		for i in range(N):
+			print(f"game {i} done")
+			game  =  main()
+			self.run(game = game)
+			score[i] = game.score
+			maxitile[i] = game.matrix.max()
+		return score, maxitile
+
+	def silent_simu(self, N):
+		self.silent = True
+		score, maxitile = self.simulate(N)
+		self.silent = False
+		plt.hist(maxitile)
+		plt.show()
+	
+	def go_deep(self, matrix, depth):
+		if depth == self.max_depth:
+			return self.final_score(matrix)
+		else:
+			return self.calc_score(matrix, depth)
+			# total = 0
+			# for i in range(4):
+			# 	total += self.calc_score(super().action(i, matrix), depth)
+			# 	print(total)
+			# return total
+
+	def calc_score(self, matrix, depth):
+		score = 0
+		best_score = -1e18
+		snake_evals = np.zeros(4)
+		for i in range(4):
+			m = super().action(i, matrix)#, w_relou_add=True)
+			snake_evals[i] = self.final_score(m)
+
+		best_evals = np.argsort(snake_evals)
+		for i in best_evals[-2:]: #select the best two moves to probe
+			m = super().action(i, matrix)
+			if not np.allclose(matrix, m):
+				score += self.go_deep(m, depth + 1)
+				# best_score = max(score, best_score)
+		return score
+
+	def probe_move(self, matrix):
+		self.matrix_unchanged = True
+		depth = 0
+		score = -1e18
+		best_score = -1e18
+		best_move = 0
+		snake_evals = np.zeros(4)
+		m = np.copy(matrix)
+
+		for i in range(4):
+			m = super().action(i, matrix)#, w_relou_add=True)
+			if np.allclose(m, matrix):# or (self.u_dead_yet(m) == -1):
+				snake_evals[i] = -1e18
+			#elif self.u_dead_yet(m) == 1: score = 1e18
+			else: snake_evals[i] = self.final_score(m)
+
+		best_evals = np.argsort(snake_evals)
+		for i in best_evals[-2:]:
+			m = super().action(i, matrix)
+			if np.allclose(m, matrix):# or (self.u_dead_yet(m) == -1): 
+				score = -1e18
+			#elif self.u_dead_yet(m) == 1: score = 1e18
+			else: score = self.go_deep(m, 0)
+			
+			if score > best_score:
+				best_score = score
+				best_move = i
+		return best_move
+
+	def snake_eval(self, matrix):
+		return np.sum(matrix * self.snake_matrix)
+
+	def final_score(self, matrix):
+		nz_weight = 2.7 #10
+		max_weight = 1 #1
+		max_pos_weight = 0 #1000
+		smv_weight = 0.1
+		# mono_weight = 0.1
+		# snake_weight = 0.3
+		if self.u_dead_yet(matrix) == 1: return 1e18
+		elif self.u_dead_yet(matrix) == -1: return -1e18
+		else:
+			return np.max(matrix) * max_weight - np.count_nonzero(matrix) * nz_weight \
+				+ np.argmax(matrix) * max_pos_weight - smv_weight * super().smoothness(matrix) \
+				#+ snake_weight * self.snake_eval(matrix) #+ mono_weight * super().monolithic(matrix) 
 
 
 
 
 if __name__ == "__main__":
-	# agent = CarloTheSnakeAgent()
-	# agent.silent_simu(100)
+	# N = 100
+	# agent = CarloAgent()
+	# a = agent.simulate(N)[1]
+
+	# plt.title(f'Carlo performance N = {N}')
+	# plt.xlabel('max tile reached')
+	# plt.ylabel('counts')
+	# b = np.unique(a,return_counts=True)
+	# print(b)
+	# plt.bar([str(int(k)) for k in b[0]],np.unique(a,return_counts=True)[1])
+	# plt.show()
 
 	app = QApplication(sys.argv)
 	window = MainWindow()
-	agent = CarloTheSnakeAgent(gui=window, speed=0.025, max_depth=8)
+	# agent = CarloAgent(gui=window, speed=0.025, max_depth=2)
+	agent = CarloDoubleAgent(gui=window, speed=0.025)#, max_depth=5)
 	# agent = FutureSerpentin(gui=window, speed=0.025)
 	window.mutlithread_this(agent.simulate, 10)
 	app.exec_()

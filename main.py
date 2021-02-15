@@ -9,13 +9,10 @@ from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow, QDialog, QStacke
 from PyQt5.QtCore import QRunnable, QThreadPool
 from PyQt5 import QtCore, QtWidgets, QtGui, Qt
 
-# import keyboard
-
 import sys
 
 
 #--------------------- METHODS ---------------------
-
 class main():
 	def __init__(self, DEBUG=False, no_GUI=False):
 		self.DEBUG = DEBUG
@@ -66,7 +63,6 @@ class main():
 
 	def transpose(self):
 		self.matrix = np.transpose(self.matrix)
-
 
 
 	#--------- UPDATES ---------
