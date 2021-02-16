@@ -39,15 +39,15 @@ class AgentBase():
 			game.down()
 			self.update_gui(game.matrix)
 
-	def action(self, action, matrix, w_relou_add=False):
+	def action(self, action, matrix, wo_add=False):
 		if action == 0: 
-			return self.left(matrix, w_relou_add=False)
+			return self.left(matrix, wo_add=False)
 		elif action == 1:
-			return self.right(matrix, w_relou_add=False)
+			return self.right(matrix, wo_add=False)
 		elif action == 2:
-			return self.up(matrix, w_relou_add=False)
+			return self.up(matrix, wo_add=False)
 		elif action == 3:
-			return self.down(matrix, w_relou_add=False)
+			return self.down(matrix, wo_add=False)
 
 	# ACTIONS
 	def stack(self, matrix):
@@ -96,40 +96,40 @@ class AgentBase():
 			new_matrix[col] = np.random.choice([2, 4], p=[0.9, 0.1]) #add randomly a 2 or a 4
 		return new_matrix
 
-	def stack_AND_combine(self, matrix, w_relou_add=False):
+	def stack_AND_combine(self, matrix, wo_add=False):
 		old = np.copy(matrix)
 		new = self.stack(matrix)
 		new = self.recombine(new)
 		new = self.stack(new)
 		if not np.allclose(old, new):
-			if w_relou_add:
-				self.relou_add(matrix)
-			else:
+			# if wo_add:
+				# self.relou_add(matrix)
+			if not wo_add:
 				new = self.add_tile(new) # add random tile if changes happened
 				self.matrix_unchanged = False
 		else: self.matrix_unchanged = True
 		return new
 
-	def left(self, matrix, w_relou_add=False):
+	def left(self, matrix, wo_add=False):
 			# Move all to left
-			return self.stack_AND_combine(matrix, w_relou_add=False)
+			return self.stack_AND_combine(matrix, wo_add=False)
 		
-	def right(self, matrix, w_relou_add=False):
+	def right(self, matrix, wo_add=False):
 		new = self.reverse(matrix) #by flipping it we just have to the same as for left()
-		new = self.stack_AND_combine(new, w_relou_add=False)
+		new = self.stack_AND_combine(new, wo_add=False)
 		new = self.reverse(new)
 		return new
 
-	def up(self, matrix, w_relou_add=False):
+	def up(self, matrix, wo_add=False):
 		new = self.transpose(matrix)
-		new = self.stack_AND_combine(new, w_relou_add=False)
+		new = self.stack_AND_combine(new, wo_add=False)
 		new = self.transpose(new)
 		return new
 
-	def down(self, matrix, w_relou_add=False):
+	def down(self, matrix, wo_add=False):
 		new = self.transpose(matrix)
 		new = self.reverse(new) 
-		new = self.stack_AND_combine(new, w_relou_add=False)
+		new = self.stack_AND_combine(new, wo_add=False)
 		new = self.reverse(new)
 		new = self.transpose(new)
 		return new
@@ -621,7 +621,7 @@ class CarloTheSnakeAgent(AgentBase):
 		best_score = -1e18
 		snake_evals = np.zeros(4)
 		for i in range(4):
-			m = super().action(i, matrix)#, w_relou_add=True)
+			m = super().action(i, matrix)#, wo_add=True)
 			snake_evals[i] = self.snake_eval(m)
 
 		best_evals = np.argsort(snake_evals)
@@ -642,7 +642,7 @@ class CarloTheSnakeAgent(AgentBase):
 		m = np.copy(matrix)
 
 		for i in range(4):
-			m = super().action(i, matrix)#, w_relou_add=True)
+			m = super().action(i, matrix)#, wo_add=True)
 			if np.allclose(m, matrix):
 				snake_evals[i] = -1e18
 			else: snake_evals[i] = self.snake_eval(m)
@@ -720,7 +720,7 @@ class CarloAgent(AgentBase):
 		best_score = -1e18
 		snake_evals = np.zeros(4)
 		for i in range(4):
-			m = super().action(i, matrix)#, w_relou_add=True)
+			m = super().action(i, matrix)#, wo_add=True)
 			snake_evals[i] = self.final_score(m)
 
 		best_evals = np.argsort(snake_evals)
@@ -741,7 +741,7 @@ class CarloAgent(AgentBase):
 		m = np.copy(matrix)
 
 		for i in range(4):
-			m = super().action(i, matrix)#, w_relou_add=True)
+			m = super().action(i, matrix)#, wo_add=True)
 			if np.allclose(m, matrix):
 				snake_evals[i] = -1e18
 			else: snake_evals[i] = self.final_score(m)
@@ -769,6 +769,7 @@ class CarloAgent(AgentBase):
 			#+ mono_weight * super().monolithic(matrix)
 
 
+# ! WIP
 #--------------------- Monte Carlo Double Agent ---------------------
 class CarloDoubleAgent(AgentBase):
 	def __init__(self, gui=None, speed=0.05, max_depth=2):
@@ -788,6 +789,7 @@ class CarloDoubleAgent(AgentBase):
 	def run(self, game=main()):
 		self.game = game
 		while self.game.u_dead_yet() == 0:
+			print('calc')
 			best_move = self.probe_move(self.game.matrix)
 			# print(best_move)
 			self.move(best_move, game)
@@ -826,8 +828,9 @@ class CarloDoubleAgent(AgentBase):
 		best_score = -1e18
 		snake_evals = np.zeros(4)
 		for i in range(4):
-			m = super().action(i, matrix)#, w_relou_add=True)
-			snake_evals[i] = self.final_score(m)
+			# m = super().action(i, matrix)#, wo_add=True)
+			# snake_evals[i] = self.final_score(m)
+			snake_evals[i] = self.score_averager(i, matrix)
 
 		best_evals = np.argsort(snake_evals)
 		for i in best_evals[-2:]: #select the best two moves to probe
@@ -836,6 +839,22 @@ class CarloDoubleAgent(AgentBase):
 				score += self.go_deep(m, depth + 1)
 				# best_score = max(score, best_score)
 		return score
+
+	def score_averager(self, i, matrix, nb_avg=16): #15
+		# nb_avg=int(np.count_nonzero(matrix)*0.6)
+		if np.allclose(self.action(i, matrix), matrix):
+			return -1e18
+		else:
+			m = self.action(i, matrix, wo_add=True)
+			evals = np.zeros(nb_avg)
+			for j in range(nb_avg):
+				new_m = self.add_tile(m)
+				if self.u_dead_yet(new_m) == -1:
+					evals[j] = -1e18
+				elif self.u_dead_yet(new_m) == 1: evals[j] = 1e18
+				else: evals[j] = self.final_score(new_m)
+			return np.sum(evals)
+
 
 	def probe_move(self, matrix):
 		self.matrix_unchanged = True
@@ -847,17 +866,21 @@ class CarloDoubleAgent(AgentBase):
 		m = np.copy(matrix)
 
 		for i in range(4):
-			m = super().action(i, matrix)#, w_relou_add=True)
-			if np.allclose(m, matrix):# or (self.u_dead_yet(m) == -1):
-				snake_evals[i] = -1e18
-			#elif self.u_dead_yet(m) == 1: score = 1e18
-			else: snake_evals[i] = self.final_score(m)
+			# m = super().action(i, matrix)#, wo_add=True)
+			# if np.allclose(m, matrix) or (self.u_dead_yet(m) == -1):
+			# 	snake_evals[i] = -1e18
+			# 	print('shiiiiiiiiiit11')
+			# #elif self.u_dead_yet(m) == 1: score = 1e18
+			# else: snake_evals[i] = self.final_score(m)
+			snake_evals[i] = self.score_averager(i, matrix)
 
 		best_evals = np.argsort(snake_evals)
-		for i in best_evals[-2:]:
+		bests = best_evals[best_evals > -1e16]
+		for i in bests[-2:]:
 			m = super().action(i, matrix)
-			if np.allclose(m, matrix):# or (self.u_dead_yet(m) == -1): 
+			if np.allclose(m, matrix):# 	 or (self.u_dead_yet(m) == -1): 
 				score = -1e18
+				print('shiiiiiiiiiit22')
 			#elif self.u_dead_yet(m) == 1: score = 1e18
 			else: score = self.go_deep(m, 0)
 			
@@ -873,36 +896,199 @@ class CarloDoubleAgent(AgentBase):
 		nz_weight = 2.7 #10
 		max_weight = 1 #1
 		max_pos_weight = 0 #1000
-		smv_weight = 0.1
+		smv_weight = 0 #0.1
 		# mono_weight = 0.1
 		# snake_weight = 0.3
-		if self.u_dead_yet(matrix) == 1: return 1e18
-		elif self.u_dead_yet(matrix) == -1: return -1e18
+		if self.u_dead_yet(matrix) == 1: 
+			print("willwin")
+			return 1e18
+		# elif self.u_dead_yet(matrix) == -1: 
+		# 	print("willlose")
+		# 	return 0 #-1e18
+		# else:
+		return np.max(matrix) * max_weight - np.count_nonzero(matrix) * nz_weight \
+			+ np.argmax(matrix) * max_pos_weight - smv_weight * super().smoothness(matrix) \
+			#+ snake_weight * self.snake_eval(matrix) #+ mono_weight * super().monolithic(matrix) 
+
+
+#--------------------- Monte Carlo Double Agent ---------------------
+class CarloTripleAgent(AgentBase):
+	def __init__(self, gui=None, speed=0.05, max_depth=2):
+		super().__init__(gui, speed)
+		self.max_depth = max_depth
+		self.snake_matrix = np.ones((4,4))
+		for i in range(4):
+			for j in range(4):
+				if i % 2 == 0:
+				# 	self.snake_matrix[i,j] *= (15-i-j)
+				# else: self.snake_matrix[i,3-j] *= (15-i-3+j)
+					self.snake_matrix[i,j] = 0.1**(i+j)
+				else: self.snake_matrix[i,3-j] = 0.1**(i+3-j)
+				# 	self.snake_matrix[i,j] = 2**(15-i-j)
+				# else: self.snake_matrix[i,3-j] = 2**(15-i-3+j)
+	
+	def run(self, game=main()):
+		self.game = game
+		while self.game.u_dead_yet() == 0:
+			# print('calc')
+			best_move = self.probe_move(self.game.matrix)
+			# print(best_move)
+			self.move(best_move, game)
+
+	def simulate(self, N):
+		score = np.zeros(N)
+		maxitile = np.zeros(N)
+		for i in range(N):
+			print(f"game {i} done")
+			game  =  main()
+			self.run(game = game)
+			score[i] = game.score
+			maxitile[i] = game.matrix.max()
+		return score, maxitile
+
+	def silent_simu(self, N):
+		self.silent = True
+		score, maxitile = self.simulate(N)
+		self.silent = False
+		plt.hist(maxitile)
+		plt.show()
+	
+	def go_deep(self, matrix, depth):
+		if depth == self.max_depth:
+			return self.final_score(matrix)
 		else:
-			return np.max(matrix) * max_weight - np.count_nonzero(matrix) * nz_weight \
-				+ np.argmax(matrix) * max_pos_weight - smv_weight * super().smoothness(matrix) \
-				#+ snake_weight * self.snake_eval(matrix) #+ mono_weight * super().monolithic(matrix) 
+			return self.calc_score(matrix, depth)
+			# total = 0
+			# for i in range(4):
+			# 	total += self.calc_score(super().action(i, matrix), depth)
+			# 	print(total)
+			# return total
+
+	def calc_score(self, matrix, depth):
+		score = 0
+		best_score = -1e18
+		snake_evals = np.zeros(4)
+		for i in range(4):
+			# m = super().action(i, matrix)#, wo_add=True)
+			# snake_evals[i] = self.final_score(m)
+			snake_evals[i] = self.score_averager(i, matrix)
+
+		best_evals = np.argsort(snake_evals)
+		for i in best_evals[-2:]: #select the best two moves to probe
+			m = super().action(i, matrix)
+			if not np.allclose(matrix, m):
+				score += self.go_deep(m, depth + 1)
+				# best_score = max(score, best_score)
+		return score
+
+	def score_averager(self, i, matrix, nb_avg=16): #15
+		# nb_avg=int(np.count_nonzero(matrix)*0.6)
+		if np.allclose(self.action(i, matrix), matrix):
+			return -1e18
+		else:
+			m = self.action(i, matrix, wo_add=True)
+			evals = np.zeros(nb_avg)
+			for j in range(nb_avg):
+				new_m = self.add_tile(m)
+				if self.u_dead_yet(new_m) == -1:
+					evals[j] = -1e18
+				elif self.u_dead_yet(new_m) == 1: evals[j] = 1e18
+				else: evals[j] = self.final_score(new_m)
+			return np.sum(evals)
+
+
+	def probe_move(self, matrix):
+		self.matrix_unchanged = True
+		depth = 0
+		score = -1e18
+		best_score = -1e18
+		best_move = 0
+		snake_evals = np.zeros(4)
+		m = np.copy(matrix)
+
+		for i in range(4):
+			# m = super().action(i, matrix)#, wo_add=True)
+			# if np.allclose(m, matrix) or (self.u_dead_yet(m) == -1):
+			# 	snake_evals[i] = -1e18
+			# 	print('shiiiiiiiiiit11')
+			# #elif self.u_dead_yet(m) == 1: score = 1e18
+			# else: snake_evals[i] = self.final_score(m)
+			snake_evals[i] = self.score_averager(i, matrix)
+
+		best_evals = np.argsort(snake_evals)
+		bests = best_evals[best_evals > -1e16]
+		for i in bests[-2:]:
+			m = super().action(i, matrix)
+			if np.allclose(m, matrix):# 	 or (self.u_dead_yet(m) == -1): 
+				score = -1e18
+				print('shiiiiiiiiiit22')
+			#elif self.u_dead_yet(m) == 1: score = 1e18
+			else: score = self.go_deep(m, 0)
+			
+			if score > best_score:
+				best_score = score
+				best_move = i
+		return best_move
+
+	def snake_eval(self, matrix):
+		return np.sum(matrix * self.snake_matrix)
+
+	def final_score(self, matrix):
+		nz_weight = 2.7 #10
+		max_weight = 1 #1
+		max_pos_weight = 0 #1000
+		smv_weight = 0 #0.1
+		stack_weight = 0.5
+		# mono_weight = 0.1
+		# snake_weight = 0.3
+		if self.u_dead_yet(matrix) == 1: 
+			print("willwin")
+			return 1e18
+		# elif self.u_dead_yet(matrix) == -1: 
+		# 	print("willlose")
+		# 	return 0 #-1e18
+		# else:
+		return np.max(matrix) * max_weight - np.count_nonzero(matrix) * nz_weight \
+			+ np.argmax(matrix) * max_pos_weight - smv_weight * super().smoothness(matrix) \
+			+ stack_weight * self.stack_tot(matrix)
+			#+ snake_weight * self.snake_eval(matrix) #+ mono_weight * super().monolithic(matrix) 
+
+	def stack_nb_H(self, m):
+		count = 0
+		for i in range(4):
+			for j in range(3):
+				if m[i,j] == m[i,j+1]: count += 1
+		return count
+
+	def stack_nb_V(self, m):
+		return self.stack_nb_H(np.transpose(m))
+	
+	def stack_tot(self, m):
+		return self.stack_nb_H(m) + self.stack_nb_V(m)
 
 
 
+# ? try and dissociate both not np.allclose -> -1e18 and u_dead_yet -> -1e17 maybe ? i dunno
+# ? try new version of futureSerpentin that can only see 2 moves in the future AND averages ??
+# ? clever serpentin ou prio qui voit un coup en avance ou du moins evalue s'il perd au tour d'apres et donc il le fait pas lol
 
 if __name__ == "__main__":
-	# N = 100
-	# agent = CarloAgent()
-	# a = agent.simulate(N)[1]
+	N = 10
+	agent = CarloTripleAgent(max_depth=1)
+	a = agent.simulate(N)[1]
 
-	# plt.title(f'Carlo performance N = {N}')
-	# plt.xlabel('max tile reached')
-	# plt.ylabel('counts')
-	# b = np.unique(a,return_counts=True)
-	# print(b)
-	# plt.bar([str(int(k)) for k in b[0]],np.unique(a,return_counts=True)[1])
-	# plt.show()
+	plt.title(f'Carlo Avg(16) Dpth(2) performance N = {N}')
+	plt.xlabel('max tile reached')
+	plt.ylabel('counts')
+	b = np.unique(a,return_counts=True)
+	print(b)
+	plt.bar([str(int(k)) for k in b[0]],np.unique(a,return_counts=True)[1])
+	plt.show()
 
-	app = QApplication(sys.argv)
-	window = MainWindow()
-	# agent = CarloAgent(gui=window, speed=0.025, max_depth=2)
-	agent = CarloDoubleAgent(gui=window, speed=0.025)#, max_depth=5)
-	# agent = FutureSerpentin(gui=window, speed=0.025)
-	window.mutlithread_this(agent.simulate, 10)
-	app.exec_()
+	# app = QApplication(sys.argv)
+	# window = MainWindow()
+	# agent = CarloTripleAgent(gui=window, speed=0.00, max_depth=2)
+	# # agent = CarloTheSnakeAgent(gui=window, speed=0.025, max_depth=4)
+	# # agent = FutureSerpentin(gui=window, speed=0.025)
+	# window.mutlithread_this(agent.simulate, 10)
+	# app.exec_()
