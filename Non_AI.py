@@ -880,7 +880,7 @@ class CarloDoubleAgent(AgentBase):
 			m = super().action(i, matrix)
 			if np.allclose(m, matrix):# 	 or (self.u_dead_yet(m) == -1): 
 				score = -1e18
-				print('shiiiiiiiiiit22')
+				# print('shiiiiiiiiiit22')
 			#elif self.u_dead_yet(m) == 1: score = 1e18
 			else: score = self.go_deep(m, 0)
 			
@@ -913,9 +913,10 @@ class CarloDoubleAgent(AgentBase):
 
 #--------------------- Monte Carlo Double Agent ---------------------
 class CarloTripleAgent(AgentBase):
-	def __init__(self, gui=None, speed=0.05, max_depth=2):
+	def __init__(self, gui=None, speed=0.05, max_depth=2, avg=16):
 		super().__init__(gui, speed)
 		self.max_depth = max_depth
+		self.avg = avg
 		self.snake_matrix = np.ones((4,4))
 		for i in range(4):
 			for j in range(4):
@@ -981,21 +982,20 @@ class CarloTripleAgent(AgentBase):
 				# best_score = max(score, best_score)
 		return score
 
-	def score_averager(self, i, matrix, nb_avg=16): #15
+	def score_averager(self, i, matrix):#, avg=16)
 		# nb_avg=int(np.count_nonzero(matrix)*0.6)
 		if np.allclose(self.action(i, matrix), matrix):
 			return -1e18
 		else:
 			m = self.action(i, matrix, wo_add=True)
-			evals = np.zeros(nb_avg)
-			for j in range(nb_avg):
+			evals = np.zeros(self.avg)
+			for j in range(self.avg):
 				new_m = self.add_tile(m)
 				if self.u_dead_yet(new_m) == -1:
 					evals[j] = -1e18
 				elif self.u_dead_yet(new_m) == 1: evals[j] = 1e18
 				else: evals[j] = self.final_score(new_m)
 			return np.sum(evals)
-
 
 	def probe_move(self, matrix):
 		self.matrix_unchanged = True
@@ -1021,7 +1021,7 @@ class CarloTripleAgent(AgentBase):
 			m = super().action(i, matrix)
 			if np.allclose(m, matrix):# 	 or (self.u_dead_yet(m) == -1): 
 				score = -1e18
-				print('shiiiiiiiiiit22')
+				# print('shiiiiiiiiiit22')
 			#elif self.u_dead_yet(m) == 1: score = 1e18
 			else: score = self.go_deep(m, 0)
 			
@@ -1035,7 +1035,7 @@ class CarloTripleAgent(AgentBase):
 
 	def final_score(self, matrix):
 		nz_weight = 2.7 #10
-		max_weight = 1 #1
+		max_weight = 0.5 #1
 		max_pos_weight = 0 #1000
 		smv_weight = 0 #0.1
 		stack_weight = 0.5
@@ -1049,8 +1049,9 @@ class CarloTripleAgent(AgentBase):
 		# 	return 0 #-1e18
 		# else:
 		return np.max(matrix) * max_weight - np.count_nonzero(matrix) * nz_weight \
-			+ np.argmax(matrix) * max_pos_weight - smv_weight * super().smoothness(matrix) \
+			+ np.argmax(matrix) * max_pos_weight \
 			+ stack_weight * self.stack_tot(matrix)
+			#- smv_weight * super().smoothness(matrix) \
 			#+ snake_weight * self.snake_eval(matrix) #+ mono_weight * super().monolithic(matrix) 
 
 	def stack_nb_H(self, m):
@@ -1074,7 +1075,7 @@ class CarloTripleAgent(AgentBase):
 
 if __name__ == "__main__":
 	N = 10
-	agent = CarloTripleAgent(max_depth=1)
+	agent = CarloTripleAgent(max_depth=2)
 	a = agent.simulate(N)[1]
 
 	plt.title(f'Carlo Avg(16) Dpth(2) performance N = {N}')

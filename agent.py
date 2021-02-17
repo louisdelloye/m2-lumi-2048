@@ -12,12 +12,13 @@ class Agent():
   Class that contains all types of AI
   """
 
-  def __init__(self, selec, silent=False, nb_game=100, speed=0.1, max_depth=5):
+  def __init__(self, selec, silent=False, nb_game=100, speed=0.1, max_depth=5, avg=16):
     self.game = main()
     self.selec = selec
     self.speed = speed
     self.nb_game = nb_game
     self.max_depth = max_depth
+    self.avg = avg
     self.silent = silent
     self.run_loop()
 
@@ -50,6 +51,10 @@ class Agent():
         if self.silent: agent = Non_AI.CarloTheSnakeAgent(speed=self.speed, max_depth=self.max_depth)
         else: agent = Non_AI.CarloTheSnakeAgent(gui=window, speed=self.speed, max_depth=self.max_depth)
 
+      elif self.selec == "triple":
+        if self.silent: agent = Non_AI.CarloTripleAgent(speed=self.speed, max_depth=self.max_depth, avg=self.avg)
+        else: agent = Non_AI.CarloTripleAgent(gui=window, speed=self.speed, max_depth=self.max_depth, avg=self.avg)
+
       if self.silent: agent.silent_simu(self.nb_game)
       else: window.mutlithread_this(agent.simulate, self.nb_game)
 
@@ -57,4 +62,5 @@ class Agent():
 
 
 if __name__ == "__main__":
-  Agent("carlosnake", nb_game=10, speed=0.05, max_depth=5)#, silent=True)#, max_depth=5)
+  Agent("triple", nb_game=10, speed=0.05, max_depth=2, avg=16)#, silent=True)#, max_depth=5)
+  # Agent("carlosnake", nb_game=10, speed=0.05, max_depth=5)#, silent=True)#, max_depth=5)
