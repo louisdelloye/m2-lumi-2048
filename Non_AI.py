@@ -945,6 +945,7 @@ class CarloTripleAgent(AgentBase):
 			self.run(game = game)
 			score[i] = game.score
 			maxitile[i] = game.matrix.max()
+			print(game.matrix)
 		return score, maxitile
 
 	def silent_simu(self, N):
@@ -1066,7 +1067,6 @@ class CarloTripleAgent(AgentBase):
 	
 	def stack_tot(self, m):
 		return self.stack_nb_H(m) + self.stack_nb_V(m)
-
 
 
 # ? try and dissociate both not np.allclose -> -1e18 and u_dead_yet -> -1e17 maybe ? i dunno

@@ -62,5 +62,5 @@ class Agent():
 
 
 if __name__ == "__main__":
-  Agent("triple", nb_game=10, speed=0.05, max_depth=2, avg=16)#, silent=True)#, max_depth=5)
+  Agent("triple", nb_game=10, speed=0.005, max_depth=2, avg=16)#, silent=True)
   # Agent("carlosnake", nb_game=10, speed=0.05, max_depth=5)#, silent=True)#, max_depth=5)
